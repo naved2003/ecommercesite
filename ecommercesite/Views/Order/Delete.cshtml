@@ -1,0 +1,41 @@
+﻿@model ecommercesite.Models.Order
+
+@{
+    ViewData["Title"] = "Delete Order";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-7">
+        <div class="card border-danger shadow-sm">
+            <div class="card-header bg-danger text-white">
+                <h3 class="card-title mb-0 h5">Confirm Delete</h3>
+            </div>
+            <div class="card-body">
+                <p class="mb-2">
+                    Are you sure you want to delete order
+                    <strong><code>#@Model.OrderId</code></strong>?
+                </p>
+                <p class="mb-1">
+                    <strong>Customer:</strong>
+                    @(Model.Customer?.CustName ?? Model.CustId)
+                </p>
+                <p class="mb-1">
+                    <strong>Date:</strong> @Model.OrderDate.ToString("yyyy-MM-dd HH:mm")
+                </p>
+                <p class="mb-1">
+                    <strong>Items:</strong> @(Model.Items?.Count ?? 0)
+                </p>
+                <p class="mb-0">
+                    <strong>Total:</strong> @Model.TotalAmount.ToString("C")
+                </p>
+            </div>
+            <div class="card-footer d-flex justify-content-between">
+                <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+                <form asp-action="DeleteConfirmed" asp-route-id="@Model.OrderId" method="post">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-danger">Delete Order</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

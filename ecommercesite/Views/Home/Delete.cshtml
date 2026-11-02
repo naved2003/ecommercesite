@@ -1,0 +1,37 @@
+﻿@model ecommercesite.Models.Register
+
+@{
+    ViewData["Title"] = "Remove Customer Account";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-7">
+        <div class="card border-danger shadow-sm">
+            <div class="card-header bg-danger text-white">
+                <h3 class="card-title mb-0 h5">Confirm Account Removal</h3>
+            </div>
+            <div class="card-body">
+                <p class="mb-2">Are you sure you want to permanently remove this customer account?</p>
+                <p class="mb-1">
+                    <strong>@Model.FullName</strong>
+                </p>
+                <p class="mb-1 text-muted small">
+                    Email: @Model.Email &middot;
+                    Phone: @Model.PhoneNumber
+                </p>
+                <div class="alert alert-warning mt-3 mb-0 small">
+                    <strong>Note:</strong> Removing the account does NOT delete their order history.
+                    Orders placed by this account will remain in the system but will no longer be
+                    linked to a customer (the <code>RegisterId</code> will be set to NULL).
+                </div>
+            </div>
+            <div class="card-footer d-flex justify-content-between">
+                <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+                <form asp-action="DeleteConfirmed" asp-route-id="@Model.UserId" method="post">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-danger">Remove Account</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

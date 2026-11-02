@@ -1,0 +1,43 @@
+﻿@model ecommercesite.Models.Product
+
+@{
+    ViewData["Title"] = "Product Details";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <h2>Product Details</h2>
+        <hr />
+
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-3">@Html.DisplayNameFor(m => m.ProductId)</dt>
+                    <dd class="col-sm-9"><code>@Html.DisplayFor(m => m.ProductId)</code></dd>
+
+                    <dt class="col-sm-3">@Html.DisplayNameFor(m => m.ProductName)</dt>
+                    <dd class="col-sm-9">@Html.DisplayFor(m => m.ProductName)</dd>
+
+                    <dt class="col-sm-3">@Html.DisplayNameFor(m => m.Price)</dt>
+                    <dd class="col-sm-9">@Model.Price.ToString("C")</dd>
+
+                    <dt class="col-sm-3">Category</dt>
+                    <dd class="col-sm-9">
+                        @if (Model.ProductCategory is not null)
+                        {
+                            <span class="badge bg-info text-dark">@Model.ProductCategory.CategoryName</span>
+                        }
+                        else
+                        {
+                            <span class="text-muted fst-italic">Not assigned</span>
+                        }
+                    </dd>
+                </dl>
+            </div>
+            <div class="card-footer d-flex justify-content-between">
+                <a asp-action="Index" class="btn btn-outline-secondary">&larr; Back to List</a>
+                <a asp-action="Edit" asp-route-id="@Model.ProductId" class="btn btn-primary">Edit</a>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,83 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="ecommercesite — customer, product category and account management" />
+    <title>@ViewData["Title"] - ecommercesite</title>
+
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/ecommercesite.styles.css" asp-append-version="true" />
+</head>
+<body>
+
+    <!-- Shared Menu -->
+    <partial name="_Menu" />
+
+    <!-- Toast / TempData messages -->
+    @if (TempData["Success"] is string success)
+    {
+        <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1100;">
+            <div class="toast show text-bg-success" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="d-flex">
+                    <div class="toast-body">@success</div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                </div>
+            </div>
+        </div>
+    }
+    @if (TempData["Error"] is string error)
+    {
+        <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1100;">
+            <div class="toast show text-bg-danger" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="d-flex">
+                    <div class="toast-body">@error</div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                </div>
+            </div>
+        </div>
+    }
+
+    @{
+        // The RequireAdmin filter stashes its error message in session
+        // ( TempData doesn't survive cross-controller redirects ), so pull
+        // it out here and flash it as a toast.
+        var sessionError = Context.Session.GetString("TempError");
+        if (!string.IsNullOrEmpty(sessionError))
+        {
+            Context.Session.Remove("TempError");
+            <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1100;">
+                <div class="toast show text-bg-danger" role="alert" aria-live="assertive" aria-atomic="true">
+                    <div class="d-flex">
+                        <div class="toast-body">@sessionError</div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+
+    <!-- Main Content -->
+    <main role="main" class="container py-4">
+        @RenderBody()
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer mt-auto py-3 border-top bg-light">
+        <div class="container d-flex flex-wrap justify-content-between align-items-center">
+            <span class="text-muted">&copy; @DateTime.UtcNow.Year - ecommercesite</span>
+            <span class="text-muted">
+                <a asp-controller="Home" asp-action="Privacy" class="text-decoration-none">Privacy</a>
+            </span>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+
+    @RenderSection("Scripts", required: false)
+</body>
+</html>

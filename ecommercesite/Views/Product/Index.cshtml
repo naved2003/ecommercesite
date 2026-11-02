@@ -1,0 +1,125 @@
+﻿@model IEnumerable<ecommercesite.Models.Product>
+
+@{
+    ViewData["Title"] = "Products";
+    var role = Context.Session.GetString("UserRole") ?? "Customer";
+    var isAdmin = role.Equals("Admin", StringComparison.OrdinalIgnoreCase);
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h2 class="mb-0">Products</h2>
+        <p class="text-muted small mb-0">
+            @(isAdmin ? "Browse, search and manage your product catalog." : "Browse the product catalog.")
+        </p>
+    </div>
+    @if (isAdmin)
+    {
+        <a asp-action="Create" class="btn btn-primary">+ Add Product</a>
+    }
+</div>
+
+@using (Html.BeginForm("Index", "Product", FormMethod.Get, new { @class = "row g-2 mb-3" }))
+{
+    <div class="col-md-5">
+        @Html.TextBox(
+                 "search",
+                 ViewBag.Search as string,
+                 new { @class = "form-control", placeholder = "Search by product or category...", autocomplete = "off" })
+    </div>
+    <div class="col-md-auto">
+        <button type="submit" class="btn btn-outline-primary w-100">Search</button>
+    </div>
+    <div class="col-md-auto">
+        <a asp-action="Index" class="btn btn-outline-secondary w-100">Reset</a>
+    </div>
+}
+
+<div class="table-responsive">
+    <table class="table table-bordered table-striped align-middle">
+        <thead class="table-light">
+            <tr>
+                <th>#</th>
+                <th>Product Name</th>
+                <th>Category</th>
+                <th class="text-end">Price</th>
+                <th class="text-end">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (!Model.Any())
+            {
+                <tr>
+                    <td colspan="5" class="text-center text-muted py-4">
+                        No products found.
+                    </td>
+                </tr>
+            }
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>@item.ProductId</td>
+                    <td>@item.ProductName</td>
+                    <td>
+                        @if (item.ProductCategory is not null)
+                        {
+                            <span class="badge bg-info text-dark">@item.ProductCategory.CategoryName</span>
+                        }
+                        else
+                        {
+                            <span class="text-muted fst-italic">—</span>
+                        }
+                    </td>
+                    <td class="text-end">@item.Price.ToString("C")</td>
+                    <td class="text-end text-nowrap">
+                        <a asp-action="Details" asp-route-id="@item.ProductId" class="btn btn-sm btn-outline-info">View</a>
+                        @if (isAdmin)
+                        {
+                            <a asp-action="Edit" asp-route-id="@item.ProductId" class="btn btn-sm btn-outline-primary">Edit</a>
+                            <a asp-action="Delete" asp-route-id="@item.ProductId" class="btn btn-sm btn-outline-danger">Delete</a>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@if (ViewBag.TotalPages > 1)
+{
+    <nav aria-label="Product pagination">
+        <ul class="pagination justify-content-center">
+
+            @if (ViewBag.CurrentPage > 1)
+            {
+                <li class="page-item">
+                    <a class="page-link" asp-action="Index" asp-route-page="@(ViewBag.CurrentPage - 1)" asp-route-search="@ViewBag.Search">&laquo; Previous</a>
+                </li>
+            }
+
+            @for (int i = 1; i <= (int)ViewBag.TotalPages; i++)
+            {
+                if (i == ViewBag.CurrentPage)
+                {
+                    <li class="page-item active" aria-current="page">
+                        <span class="page-link">@i</span>
+                    </li>
+                }
+                else
+                {
+                    <li class="page-item">
+                        <a class="page-link" asp-action="Index" asp-route-page="@i" asp-route-search="@ViewBag.Search">@i</a>
+                    </li>
+                }
+            }
+
+            @if (ViewBag.CurrentPage < ViewBag.TotalPages)
+            {
+                <li class="page-item">
+                    <a class="page-link" asp-action="Index" asp-route-page="@(ViewBag.CurrentPage + 1)" asp-route-search="@ViewBag.Search">Next &raquo;</a>
+                </li>
+            }
+
+        </ul>
+    </nav>
+}

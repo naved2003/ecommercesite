@@ -1,0 +1,106 @@
+/* ===========================================================================
+   ecommercesite global styles
+   =========================================================================== */
+
+:root {
+    --brand-primary: #2563eb;
+    --brand-primary-dark: #1e40af;
+    --brand-accent: #f59e0b;
+    --brand-danger: #dc3545;
+    --brand-success: #198754;
+    --body-bg: #f8fafc;
+    --body-color: #1f2937;
+    --border-color: #e5e7eb;
+}
+
+html {
+    font-size: 14px;
+    position: relative;
+    min-height: 100%;
+}
+
+@media (min-width: 768px) {
+    html {
+        font-size: 16px;
+    }
+}
+
+body {
+    background-color: var(--body-bg);
+    color: var(--body-color);
+    margin-bottom: 60px;
+    font-family: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* ---- Forms ------------------------------------------------------------- */
+.btn:focus,
+.btn:active:focus,
+.btn-link.nav-link:focus,
+.form-control:focus,
+.form-check-input:focus {
+    box-shadow: 0 0 0 0.15rem rgba(37, 99, 235, 0.25);
+}
+
+.form-label {
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+}
+
+/* ---- Tables ------------------------------------------------------------ */
+.table {
+    --bs-table-bg: #fff;
+    --bs-table-striped-bg: #f9fafb;
+    --bs-table-hover-bg: #f1f5f9;
+}
+
+    .table thead th {
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.04em;
+        color: #6b7280;
+    }
+
+/* ---- Cards ------------------------------------------------------------- */
+.card {
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+}
+
+.card-header {
+    border-bottom: 1px solid var(--border-color);
+}
+
+/* ---- Pagination -------------------------------------------------------- */
+.pagination .page-link {
+    color: var(--brand-primary);
+}
+
+.pagination .page-item.active .page-link {
+    background-color: var(--brand-primary);
+    border-color: var(--brand-primary);
+}
+
+/* ---- Toasts ------------------------------------------------------------ */
+.toast-container {
+    z-index: 1100;
+}
+
+/* ---- Helper utilities -------------------------------------------------- */
+.text-danger.small,
+small.text-danger {
+    display: block;
+    margin-top: 0.25rem;
+}
+
+.shadow-sm {
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05), 0 1px 3px 0 rgba(0, 0, 0, 0.05) !important;
+}
+
+code {
+    color: #be185d;
+    background-color: #fdf2f8;
+    padding: 0.1rem 0.35rem;
+    border-radius: 0.25rem;
+    font-size: 0.85em;
+}

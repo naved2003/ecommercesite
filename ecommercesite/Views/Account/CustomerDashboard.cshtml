@@ -1,0 +1,171 @@
+﻿@using ecommercesite.Models
+@{
+    ViewData["Title"] = "My Dashboard";
+
+    var totalOrders = (int)(ViewBag.TotalOrders ?? 0);
+    var totalSpent = (decimal)(ViewBag.TotalSpent ?? 0m);
+    var pendingOrders = (int)(ViewBag.PendingOrders ?? 0);
+    var deliveredOrders = (int)(ViewBag.DeliveredOrders ?? 0);
+    var recentOrders = (ViewBag.RecentOrders as IReadOnlyList<Order>) ?? new List<Order>();
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="mb-0">Welcome back, @ViewBag.UserFullName!</h2>
+        <p class="text-muted small mb-0">Here's a summary of your account and recent orders.</p>
+    </div>
+    <a asp-controller="Order" asp-action="PlaceOrder" class="btn btn-success">+ Place New Order</a>
+</div>
+
+<!-- KPI cards -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card text-white bg-primary h-100 shadow-sm">
+            <div class="card-body">
+                <h6 class="card-title mb-1">Total Orders</h6>
+                <h3 class="mb-0">@totalOrders</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-success h-100 shadow-sm">
+            <div class="card-body">
+                <h6 class="card-title mb-1">Total Spent</h6>
+                <h3 class="mb-0">@totalSpent.ToString("C")</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-warning h-100 shadow-sm">
+            <div class="card-body">
+                <h6 class="card-title mb-1">In Progress</h6>
+                <h3 class="mb-0">@pendingOrders</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-info h-100 shadow-sm">
+            <div class="card-body">
+                <h6 class="card-title mb-1">Delivered</h6>
+                <h3 class="mb-0">@deliveredOrders</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <!-- Recent orders -->
+    <div class="col-lg-8">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                <h3 class="h6 mb-0">Recent Orders</h3>
+                <a asp-controller="Order" asp-action="Index" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body p-0">
+                @if (recentOrders.Count == 0)
+                {
+                    <div class="text-center text-muted py-5">
+                        <p class="mb-1" style="font-size: 2rem;">&#x1F6D2;</p>
+                        <p class="mb-2">You haven't placed any orders yet.</p>
+                        <a asp-controller="Order" asp-action="PlaceOrder" class="btn btn-success btn-sm">Place Your First Order</a>
+                    </div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-sm table-striped mb-0 align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>#</th>
+                                    <th>Date</th>
+                                    <th>Items</th>
+                                    <th>Status</th>
+                                    <th>Delivery</th>
+                                    <th class="text-end">Total</th>
+                                    <th class="text-end">View</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var o in recentOrders)
+                                {
+                                    <tr>
+                                        <td><code>#@o.OrderId</code></td>
+                                        <td class="small text-nowrap">@o.OrderDate.ToString("yyyy-MM-dd")</td>
+                                        <td>@(o.Items?.Count ?? 0)</td>
+                                        <td>
+                                            @{
+                                                var badgeClass = o.Status switch
+                                                {
+                                                    "Pending" => "bg-warning text-dark",
+                                                    "Confirmed" => "bg-info text-dark",
+                                                    "Shipped" => "bg-primary",
+                                                    "Delivered" => "bg-success",
+                                                    "Cancelled" => "bg-danger",
+                                                    _ => "bg-secondary"
+                                                };
+                                            }
+                                            <span class="badge @badgeClass">@o.Status</span>
+                                        </td>
+                                        <td>
+                                            @if (string.IsNullOrEmpty(o.DeliveryStatus))
+                                            {
+                                                <span class="text-muted fst-italic">—</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-info text-dark">@o.DeliveryStatus</span>
+                                            }
+                                        </td>
+                                        <td class="text-end">@o.TotalAmount.ToString("C")</td>
+                                        <td class="text-end">
+                                            <a asp-controller="Order" asp-action="Details" asp-route-id="@o.OrderId" class="btn btn-sm btn-outline-info">Open</a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick actions + account info -->
+    <div class="col-lg-4">
+        <div class="card shadow-sm mb-3">
+            <div class="card-header bg-light">
+                <h3 class="h6 mb-0">Quick Actions</h3>
+            </div>
+            <div class="list-group list-group-flush">
+                <a asp-controller="Order" asp-action="PlaceOrder" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                    Place New Order <span>&rarr;</span>
+                </a>
+                <a asp-controller="Product" asp-action="Index" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                    Browse Products <span>&rarr;</span>
+                </a>
+                <a asp-controller="Order" asp-action="MyProducts" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                    My Products <span>&rarr;</span>
+                </a>
+                <a asp-controller="Order" asp-action="Index" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                    My Orders <span>&rarr;</span>
+                </a>
+            </div>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-header bg-light">
+                <h3 class="h6 mb-0">Account</h3>
+            </div>
+            <div class="card-body">
+                <p class="mb-1"><strong>@ViewBag.UserFullName</strong></p>
+                <p class="mb-1 text-muted small">@ViewBag.UserName</p>
+                <p class="mb-0">
+                    <span class="badge bg-info text-dark">Customer</span>
+                </p>
+            </div>
+            <div class="card-footer">
+                <a asp-action="Logout" class="btn btn-outline-danger btn-sm w-100">Logout</a>
+            </div>
+        </div>
+    </div>
+</div>

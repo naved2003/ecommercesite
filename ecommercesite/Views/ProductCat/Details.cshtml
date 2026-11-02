@@ -1,0 +1,61 @@
+﻿@model ecommercesite.Models.ProductCategory
+
+@{
+    ViewData["Title"] = "Category Details";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <h2>Category Details</h2>
+        <hr />
+
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-3">@Html.DisplayNameFor(m => m.CategoryId)</dt>
+                    <dd class="col-sm-9"><code>@Html.DisplayFor(m => m.CategoryId)</code></dd>
+
+                    <dt class="col-sm-3">@Html.DisplayNameFor(m => m.CategoryName)</dt>
+                    <dd class="col-sm-9">@Html.DisplayFor(m => m.CategoryName)</dd>
+
+                    <dt class="col-sm-3">@Html.DisplayNameFor(m => m.Description)</dt>
+                    <dd class="col-sm-9">
+                        @if (string.IsNullOrWhiteSpace(Model.Description))
+                        {
+                            <span class="text-muted fst-italic">No description provided.</span>
+                        }
+                        else
+                        {
+                            @Model.Description
+                        }
+                    </dd>
+
+                    <dt class="col-sm-3">@Html.DisplayNameFor(m => m.CreatedAt)</dt>
+                    <dd class="col-sm-9">@Model.CreatedAt.ToString("yyyy-MM-dd HH:mm") UTC</dd>
+
+                    <dt class="col-sm-3">Products</dt>
+                    <dd class="col-sm-9">
+                        @if (Model.Products == null || Model.Products.Count == 0)
+                        {
+                            <span class="text-muted fst-italic">No products in this category yet.</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-info text-dark">@Model.Products.Count product@(Model.Products.Count == 1 ? "" : "s")</span>
+                            <ul class="mt-2 mb-0">
+                                @foreach (var p in Model.Products.OrderBy(p => p.ProductName))
+                                {
+                                    <li>@p.ProductName &mdash; @p.Price.ToString("C")</li>
+                                }
+                            </ul>
+                        }
+                    </dd>
+                </dl>
+            </div>
+            <div class="card-footer d-flex justify-content-between">
+                <a asp-action="Index" class="btn btn-outline-secondary">&larr; Back to List</a>
+                <a asp-action="Edit" asp-route-id="@Model.CategoryId" class="btn btn-primary">Edit</a>
+            </div>
+        </div>
+    </div>
+</div>

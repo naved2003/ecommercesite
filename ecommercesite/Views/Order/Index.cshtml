@@ -1,0 +1,627 @@
+﻿@model IEnumerable<ecommercesite.Models.Order>
+@using ecommercesite.ViewModels
+
+@{
+    ViewData["Title"] = "Orders";
+
+    // ---- Location distribution (shipping address) -------------------------
+    var distribution = (ViewBag.LocationDistribution as IReadOnlyList<OrderLocationDistributionDto>)
+                       ?? new List<OrderLocationDistributionDto>();
+
+    var labels = distribution.Select(d => d.Address).ToList();
+    var counts = distribution.Select(d => d.OrderCount).ToList();
+    var total = counts.Sum();
+
+    // ---- Customer distribution (customer name) ----------------------------
+    var customerDist = (ViewBag.CustomerDistribution as IReadOnlyList<OrderCustomerDistributionDto>)
+                       ?? new List<OrderCustomerDistributionDto>();
+
+    var custLabels = customerDist.Select(d => d.CustomerName).ToList();
+    var custCounts = customerDist.Select(d => d.OrderCount).ToList();
+    var custTotal = custCounts.Sum();
+
+    // ---- Stacked bar chart data (per-address × per-customer) --------------
+    var locationCustomerBreakdown = (ViewBag.LocationCustomerBreakdown as IReadOnlyList<OrderLocationCustomerBreakdownDto>)
+                                    ?? new List<OrderLocationCustomerBreakdownDto>();
+
+    // Addresses (x-axis) — same ordering as the location pie chart so the
+    // two charts line up visually.
+    var stackedLabels = labels;
+    // Distinct customer names — one dataset per customer.
+    var stackedCustomers = locationCustomerBreakdown
+        .Select(r => r.CustomerName)
+        .Distinct()
+        .OrderBy(n => n)
+        .ToList();
+    // Build the matrix: for each customer, an array of counts indexed by
+    // the address list. 0 when the customer has no orders at that address.
+    var stackedMatrix = stackedCustomers
+        .Select(cust => stackedLabels
+            .Select(addr => locationCustomerBreakdown
+                .Where(r => r.Address == addr && r.CustomerName == cust)
+                .Sum(r => r.OrderCount))
+            .ToList())
+        .ToList();
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h2 class="mb-0">@(ViewBag.IsAdmin == true ? "Orders" : "My Orders")</h2>
+        <p class="text-muted small mb-0">
+            @(ViewBag.IsAdmin == true
+                ? "Browse, search and manage customer orders."
+                : "Track the orders you've placed.")
+        </p>
+    </div>
+    @if (ViewBag.IsAdmin == true)
+    {
+        <a asp-action="Create" class="btn btn-primary">+ New Order</a>
+    }
+    else
+    {
+        <a asp-action="PlaceOrder" class="btn btn-success">+ Place Order</a>
+    }
+</div>
+
+@using (Html.BeginForm("Index", "Order", FormMethod.Get, new { @class = "row g-2 mb-3 align-items-end" }))
+{
+    <div class="col-md-3">
+        <label class="form-label small text-muted mb-1">Search</label>
+        @Html.TextBox(
+                 "search",
+                 ViewBag.Search as string,
+                 new { @class = "form-control", placeholder = "Order #, status...", autocomplete = "off" })
+    </div>
+    @if (ViewBag.IsAdmin == true)
+    {
+        <div class="col-md-2">
+            <label class="form-label small text-muted mb-1" for="startDateFilter">Start date</label>
+            <input type="date"
+                   id="startDateFilter"
+                   name="startDate"
+                   class="form-control"
+                   value="@(ViewBag.StartDate as string)" />
+        </div>
+        <div class="col-md-2">
+            <label class="form-label small text-muted mb-1" for="endDateFilter">End date</label>
+            <input type="date"
+                   id="endDateFilter"
+                   name="endDate"
+                   class="form-control"
+                   value="@(ViewBag.EndDate as string)" />
+        </div>
+    }
+    <div class="col-md-auto">
+        <button type="submit" class="btn btn-outline-primary w-100">Filter</button>
+    </div>
+    <div class="col-md-auto">
+        <a asp-action="Index" class="btn btn-outline-secondary w-100">Reset</a>
+    </div>
+}
+
+<div class="row g-3">
+    <!-- Orders table ------------------------------------------------------ -->
+    <div class="@(ViewBag.IsAdmin == true ? "col-lg-8" : "col-12")">
+        <div class="card shadow-sm">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>#</th>
+                                <th>Order Date</th>
+                                <th>Customer</th>
+                                <th>Items</th>
+                                <th class="text-end">Total</th>
+                                <th>Status</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (!Model.Any())
+                            {
+                                <tr>
+                                    <td colspan="7" class="text-center text-muted py-4">
+                                        No orders found.
+                                    </td>
+                                </tr>
+                            }
+                            @foreach (var order in Model)
+                            {
+                                <tr>
+                                    <td><code>#@order.OrderId</code></td>
+                                    <td class="text-nowrap">@order.OrderDate.ToString("yyyy-MM-dd HH:mm")</td>
+                                    <td>
+                                        @if (order.Customer is not null)
+                                        {
+                                            <span title="@order.Customer.CustId">@order.Customer.CustName</span>
+                                        }
+                                        else if (order.Register is not null)
+                                        {
+                                            <span title="@order.Register.Email">@order.Register.FullName</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted fst-italic">—</span>
+                                        }
+                                    </td>
+                                    <td>@(order.Items?.Count ?? 0)</td>
+                                    <td class="text-end">@order.TotalAmount.ToString("C")</td>
+                                    <td>
+                                        @{
+                                            var badgeClass = order.Status switch
+                                            {
+                                                "Pending" => "bg-warning text-dark",
+                                                "Confirmed" => "bg-info text-dark",
+                                                "Shipped" => "bg-primary",
+                                                "Delivered" => "bg-success",
+                                                "Cancelled" => "bg-danger",
+                                                _ => "bg-secondary"
+                                            };
+                                        }
+                                        <span class="badge @badgeClass">@order.Status</span>
+                                    </td>
+                                    <td class="text-end text-nowrap">
+                                        <a asp-action="Details" asp-route-id="@order.OrderId" class="btn btn-sm btn-outline-info">View</a>
+                                        @if (ViewBag.IsAdmin == true)
+                                        {
+                                            <a asp-action="Delete" asp-route-id="@order.OrderId" class="btn btn-sm btn-outline-danger">Delete</a>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            @if (ViewBag.TotalPages > 1)
+            {
+                <div class="card-footer bg-white">
+                    <nav aria-label="Order pagination">
+                        <ul class="pagination justify-content-center mb-0">
+
+                            @if (ViewBag.CurrentPage > 1)
+                            {
+                                <li class="page-item">
+                                    <a class="page-link" asp-action="Index" asp-route-page="@(ViewBag.CurrentPage - 1)" asp-route-search="@ViewBag.Search" asp-route-startDate="@(ViewBag.StartDate as string)" asp-route-endDate="@(ViewBag.EndDate as string)">&laquo; Previous</a>
+                                </li>
+                            }
+
+                            @for (int i = 1; i <= (int)ViewBag.TotalPages; i++)
+                            {
+                                if (i == ViewBag.CurrentPage)
+                                {
+                                    <li class="page-item active" aria-current="page">
+                                        <span class="page-link">@i</span>
+                                    </li>
+                                }
+                                else
+                                {
+                                    <li class="page-item">
+                                        <a class="page-link" asp-action="Index" asp-route-page="@i" asp-route-search="@ViewBag.Search" asp-route-startDate="@(ViewBag.StartDate as string)" asp-route-endDate="@(ViewBag.EndDate as string)">@i</a>
+                                    </li>
+                                }
+                            }
+
+                            @if (ViewBag.CurrentPage < ViewBag.TotalPages)
+                            {
+                                <li class="page-item">
+                                    <a class="page-link" asp-action="Index" asp-route-page="@(ViewBag.CurrentPage + 1)" asp-route-search="@ViewBag.Search" asp-route-startDate="@(ViewBag.StartDate as string)" asp-route-endDate="@(ViewBag.EndDate as string)">Next &raquo;</a>
+                                </li>
+                            }
+
+                        </ul>
+                    </nav>
+                </div>
+            }
+        </div>
+    </div>
+
+    @if (ViewBag.IsAdmin == true)
+    {
+        <!-- Pie + bar chart sidebar (admin only) -------------------------------- -->
+        <div class="col-lg-4">
+            <!-- By Location card -->
+            <div class="card shadow-sm mb-3">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h3 class="h6 mb-0">By Location</h3>
+                    @if (total > 0)
+                    {
+                        <span class="badge bg-light text-dark">@total order@(total == 1 ? "" : "s")</span>
+                    }
+                </div>
+                <div class="card-body">
+                    @if (!distribution.Any() || total == 0)
+                    {
+                        <div class="text-center text-muted py-5">
+                            <p class="mb-1" style="font-size: 2rem;">&#x1F4E6;</p>
+                            <p class="mb-0">No order data to chart yet.</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <h6 class="text-muted small text-uppercase mb-2">Pie chart</h6>
+                        <div style="position: relative; height: 240px;">
+                            <canvas id="locationPieChart"></canvas>
+                        </div>
+
+                        <hr class="my-3" />
+
+                        <h6 class="text-muted small text-uppercase mb-2">Stacked bar chart (by customer)</h6>
+                        <div style="position: relative; height: 280px;">
+                            <canvas id="locationBarChart"></canvas>
+                        </div>
+
+                        <hr class="my-3" />
+
+                        <div class="small">
+                            @foreach (var row in distribution)
+                            {
+                                var pct = total == 0 ? 0 : (row.OrderCount * 100.0 / total);
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span class="text-truncate" title="@row.Address">@row.Address</span>
+                                    <span class="text-muted text-nowrap ms-2">
+                                        @row.OrderCount order@(row.OrderCount == 1 ? "" : "s")
+                                        (@pct.ToString("0.0")%)
+                                        &middot; @row.TotalRevenue.ToString("C")
+                                    </span>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- By Customer card -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                    <h3 class="h6 mb-0">By Customer</h3>
+                    @if (custTotal > 0)
+                    {
+                        <span class="badge bg-light text-dark">@custTotal order@(custTotal == 1 ? "" : "s")</span>
+                    }
+                </div>
+                <div class="card-body">
+                    @if (!customerDist.Any() || custTotal == 0)
+                    {
+                        <div class="text-center text-muted py-5">
+                            <p class="mb-1" style="font-size: 2rem;">&#x1F465;</p>
+                            <p class="mb-0">No customer data to chart yet.</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <h6 class="text-muted small text-uppercase mb-2">Pie chart</h6>
+                        <div style="position: relative; height: 240px;">
+                            <canvas id="customerPieChart"></canvas>
+                        </div>
+
+                        <hr class="my-3" />
+
+                        <h6 class="text-muted small text-uppercase mb-2">Bar chart</h6>
+                        <div style="position: relative; height: 220px;">
+                            <canvas id="customerBarChart"></canvas>
+                        </div>
+
+                        <hr class="my-3" />
+
+                        <div class="small">
+                            @foreach (var row in customerDist)
+                            {
+                                var pct = custTotal == 0 ? 0 : (row.OrderCount * 100.0 / custTotal);
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span class="text-truncate" title="@row.CustomerName">@row.CustomerName</span>
+                                    <span class="text-muted text-nowrap ms-2">
+                                        @row.OrderCount order@(row.OrderCount == 1 ? "" : "s")
+                                        (@pct.ToString("0.0")%)
+                                        &middot; @row.TotalRevenue.ToString("C")
+                                    </span>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+    <!-- end admin-only chart sidebar -->
+</div>
+
+@section Scripts {
+    @if ((distribution.Any() && total > 0) || (customerDist.Any() && custTotal > 0))
+    {
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+        <script>
+            (function () {
+            const palette = ['#2563eb','#f59e0b','#10b981','#ef4444','#8b5cf6','#06b6d4','#ec4899','#84cc16','#f97316','#14b8a6','#6366f1','#a855f7'];
+
+            // =============================================================
+            // By Location — pie + bar
+            // =============================================================
+            @if (distribution.Any() && total > 0)
+            {
+                <text>
+                    (function () {
+                    const labels  = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(labels));
+                    const counts  = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(counts));
+                    const total   = counts.reduce((a, b) => a + b, 0);
+                    const colors  = labels.map((_, i) => palette[i % palette.length]);
+
+                    // ---- Pie chart ---------------------------------------------
+                    const pieCtx = document.getElementById('locationPieChart').getContext('2d');
+                    new Chart(pieCtx, {
+                    type: 'pie',
+                    data: {
+                    labels: labels,
+                    datasets: [{
+                    data: counts,
+                    backgroundColor: colors,
+                    borderColor: '#ffffff',
+                    borderWidth: 2
+                    }]
+                    },
+                    options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                    callbacks: {
+                    label: function (ctx) {
+                    const value = ctx.parsed;
+                    const pct = total ? (value * 100 / total).toFixed(1) : 0;
+                    return ` ${ctx.label}: ${value} order${value === 1 ? '' : 's'} (${pct}%)`;
+                    }
+                    }
+                    },
+                    datalabels: {
+                    color: '#ffffff',
+                    font: { weight: 'bold', size: 11 },
+                    textAlign: 'center',
+                    formatter: (value, ctx) => {
+                    const pct = parseFloat((value * 100 / total).toFixed(1));
+                    return pct >= 4 ? pct.toFixed(1) + '%' : '';
+                    }
+                    }
+                    }
+                    },
+                    plugins: [ChartDataLabels]
+                    });
+
+                    // ---- Stacked bar chart --------------------------------------
+                    // Each customer becomes one dataset (one color). For
+                    // every address, the data point is the count of that
+                    // customer's orders at that address (0 if none). With
+                    // scales.x/y.stacked = true the segments pile up into
+                    // one bar per address — bar height = total orders at
+                    // that address, and the colored segments tell you
+                    // WHICH customers placed them.
+                    const stackedLabels    = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(stackedLabels));
+                    const stackedCustomers = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(stackedCustomers));
+                    const stackedMatrix    = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(stackedMatrix));
+                    const stackedTotal     = stackedLabels.length
+                    ? stackedMatrix.flat().reduce((a, b) => a + b, 0)
+                    : 0;
+
+                    const stackedDatasets = stackedCustomers.map((cust, i) => ({
+                    label: cust,
+                    data: stackedMatrix[i],
+                    backgroundColor: palette[i % palette.length],
+                    borderColor: palette[i % palette.length],
+                    borderWidth: 1,
+                    borderRadius: 2,
+                    maxBarThickness: 48,
+                    stack: 'orders'
+                    }));
+
+                    const stackedBarCtx = document.getElementById('locationBarChart').getContext('2d');
+                    new Chart(stackedBarCtx, {
+                    type: 'bar',
+                    data: {
+                    labels: stackedLabels,
+                    datasets: stackedDatasets
+                    },
+                    options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    scales: {
+                    x: {
+                    stacked: true,
+                    ticks: {
+                    color: '#6b7280',
+                    maxRotation: 45,
+                    minRotation: 0,
+                    autoSkip: false,
+                    callback: function (value) {
+                    const lbl = this.getLabelForValue(value);
+                    return lbl.length > 15 ? lbl.slice(0, 14) + '…' : lbl;
+                    }
+                    },
+                    grid: { display: false }
+                    },
+                    y: {
+                    stacked: true,
+                    beginAtZero: true,
+                    ticks: { precision: 0, stepSize: 1, color: '#6b7280' },
+                    grid: { color: '#f1f5f9' },
+                    title: {
+                    display: true,
+                    text: 'Orders (stacked)',
+                    color: '#6b7280',
+                    font: { size: 11 }
+                    }
+                    }
+                    },
+                    plugins: {
+                    // Legend lists every customer with their
+                    // segment color — the main way to identify
+                    // who placed orders at each address.
+                    legend: {
+                    display: true,
+                    position: 'bottom',
+                    labels: {
+                    boxWidth: 12,
+                    font: { size: 10 },
+                    color: '#374151'
+                    }
+                    },
+                    tooltip: {
+                    callbacks: {
+                    // Only show non-zero segments so
+                    // the tooltip isn't flooded with
+                    // "Alice: 0" for every address she
+                    // has no orders at.
+                    label: function (ctx) {
+                    const value = ctx.parsed.y;
+                    if (!value) return null;
+                    const pct = stackedTotal ? (value * 100 / stackedTotal).toFixed(1) : 0;
+                    return ` ${ctx.dataset.label}: ${value} order${value === 1 ? '' : 's'} (${pct}%)`;
+                    },
+                    title: (items) => `Address: ${items[0].label}`
+                    }
+                    },
+                    // Hide per-segment datalabels — they
+                    // overlap when bars are short. The legend
+                    // + tooltip are enough.
+                    datalabels: { display: false }
+                    }
+                    },
+                    plugins: [ChartDataLabels]
+                    });
+                    })();
+                </text>
+            }
+
+            // =============================================================
+            // By Customer — pie + bar
+            // =============================================================
+            @if (customerDist.Any() && custTotal > 0)
+            {
+                <text>
+                    (function () {
+                    const labels  = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(custLabels));
+                    const counts  = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(custCounts));
+                    const total   = counts.reduce((a, b) => a + b, 0);
+                    const colors  = labels.map((_, i) => palette[i % palette.length]);
+
+                    // ---- Pie chart ---------------------------------------------
+                    const pieCtx = document.getElementById('customerPieChart').getContext('2d');
+                    new Chart(pieCtx, {
+                    type: 'pie',
+                    data: {
+                    labels: labels,
+                    datasets: [{
+                    data: counts,
+                    backgroundColor: colors,
+                    borderColor: '#ffffff',
+                    borderWidth: 2
+                    }]
+                    },
+                    options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                    callbacks: {
+                    label: function (ctx) {
+                    const value = ctx.parsed;
+                    const pct = total ? (value * 100 / total).toFixed(1) : 0;
+                    return ` ${ctx.label}: ${value} order${value === 1 ? '' : 's'} (${pct}%)`;
+                    }
+                    }
+                    },
+                    datalabels: {
+                    color: '#ffffff',
+                    font: { weight: 'bold', size: 11 },
+                    textAlign: 'center',
+                    formatter: (value, ctx) => {
+                    const pct = parseFloat((value * 100 / total).toFixed(1));
+                    return pct >= 4 ? pct.toFixed(1) + '%' : '';
+                    }
+                    }
+                    }
+                    },
+                    plugins: [ChartDataLabels]
+                    });
+
+                    // ---- Bar chart ---------------------------------------------
+                    const barCtx = document.getElementById('customerBarChart').getContext('2d');
+                    new Chart(barCtx, {
+                    type: 'bar',
+                    data: {
+                    labels: labels,
+                    datasets: [{
+                    label: 'Orders',
+                    data: counts,
+                    backgroundColor: colors,
+                    borderColor: colors,
+                    borderWidth: 1,
+                    borderRadius: 4,
+                    maxBarThickness: 36
+                    }]
+                    },
+                    options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                    y: {
+                    beginAtZero: true,
+                    ticks: { precision: 0, stepSize: 1, color: '#6b7280' },
+                    grid: { color: '#f1f5f9' },
+                    title: {
+                    display: true,
+                    text: 'Orders',
+                    color: '#6b7280',
+                    font: { size: 11 }
+                    }
+                    },
+                    x: {
+                    ticks: {
+                    color: '#6b7280',
+                    maxRotation: 45,
+                    minRotation: 0,
+                    autoSkip: false,
+                    callback: function (value) {
+                    const lbl = this.getLabelForValue(value);
+                    return lbl.length > 15 ? lbl.slice(0, 14) + '…' : lbl;
+                    }
+                    },
+                    grid: { display: false }
+                    }
+                    },
+                    plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                    callbacks: {
+                    label: function (ctx) {
+                    const value = ctx.parsed.y;
+                    const pct = total ? (value * 100 / total).toFixed(1) : 0;
+                    return ` ${value} order${value === 1 ? '' : 's'} (${pct}%)`;
+                    },
+                    title: (items) => items[0].label
+                    }
+                    },
+                    datalabels: {
+                    anchor: 'end',
+                    align: 'top',
+                    color: '#1f2937',
+                    font: { weight: 'bold', size: 10 },
+                    formatter: (value, ctx) => {
+                    const pct = parseFloat((value * 100 / total).toFixed(1));
+                    return pct >= 4 ? value + ' (' + pct.toFixed(1) + '%)' : '';
+                    }
+                    }
+                    }
+                    },
+                    plugins: [ChartDataLabels]
+                    });
+                    })();
+                </text>
+            }
+            })();
+        </script>
+    }
+}

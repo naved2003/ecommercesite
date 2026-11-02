@@ -1,0 +1,230 @@
+﻿@model ecommercesite.Models.Order
+
+@{
+    ViewData["Title"] = $"Order #@Model.OrderId";
+
+    var statusOptions = ViewBag.StatusOptions as string[] ?? Array.Empty<string>();
+    var badgeClass = Model.Status switch
+    {
+        "Pending" => "bg-warning text-dark",
+        "Confirmed" => "bg-info text-dark",
+        "Shipped" => "bg-primary",
+        "Delivered" => "bg-success",
+        "Cancelled" => "bg-danger",
+        _ => "bg-secondary"
+    };
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h2 class="mb-0">Order <code>#@Model.OrderId</code></h2>
+        <p class="text-muted small mb-0">
+            Placed on @Model.OrderDate.ToString("yyyy-MM-dd HH:mm") UTC
+        </p>
+    </div>
+    <a asp-action="Index" class="btn btn-outline-secondary btn-sm">&larr; Back to Orders</a>
+</div>
+
+<div class="row g-3">
+    <!-- Order summary + items -->
+    <div class="col-lg-8">
+        <div class="card shadow-sm">
+            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                <h3 class="h6 mb-0">Line items</h3>
+                <span class="badge @badgeClass">@Model.Status</span>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-sm table-striped align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Product</th>
+                                <th class="text-end">Unit Price</th>
+                                <th class="text-end">Qty</th>
+                                <th class="text-end">Line Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{
+                                var items = Model.Items ?? new List<ecommercesite.Models.OrderItem>();
+                            }
+                            @if (items.Count == 0)
+                            {
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted py-3">
+                                        This order has no line items.
+                                    </td>
+                                </tr>
+                            }
+                            @foreach (var item in items)
+                            {
+                                <tr>
+                                    <td>
+                                        @item.ProductName
+                                        @if (item.Product is null)
+                                        {
+                                            <span class="text-muted small">(product removed)</span>
+                                        }
+                                    </td>
+                                    <td class="text-end">@item.UnitPrice.ToString("C")</td>
+                                    <td class="text-end">@item.Quantity</td>
+                                    <td class="text-end">@item.LineTotal.ToString("C")</td>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot class="table-light">
+                            <tr>
+                                <th colspan="3" class="text-end">Order Total</th>
+                                <th class="text-end">@Model.TotalAmount.ToString("C")</th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Customer + status panel -->
+    <div class="col-lg-4">
+        <div class="card shadow-sm mb-3">
+            <div class="card-header bg-light">
+                <h3 class="h6 mb-0">Customer</h3>
+            </div>
+            <div class="card-body">
+                @if (Model.Customer is not null)
+                {
+                    <p class="mb-1"><strong>@Model.Customer.CustName</strong></p>
+                    <p class="mb-1 text-muted small">ID: <code>@Model.Customer.CustId</code></p>
+                    <p class="mb-0 text-muted small">@Model.Customer.CustAddress</p>
+                }
+                else if (Model.Register is not null)
+                {
+                    <p class="mb-1"><strong>@Model.Register.FullName</strong></p>
+                    <p class="mb-1 text-muted small">Email: @Model.Register.Email</p>
+                    <p class="mb-0 text-muted small">Phone: @Model.Register.PhoneNumber</p>
+                }
+                else
+                {
+                    <p class="mb-0 text-muted">Customer record not found.</p>
+                }
+            </div>
+        </div>
+
+        <div class="card shadow-sm mb-3">
+            <div class="card-header bg-light">
+                <h3 class="h6 mb-0">Shipping</h3>
+            </div>
+            <div class="card-body">
+                <p class="mb-0">@(Model.ShippingAddress ?? "(no shipping address provided)")</p>
+            </div>
+        </div>
+
+        @if (ViewBag.IsAdmin == true)
+        {
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h3 class="h6 mb-0">Update status</h3>
+                </div>
+                <div class="card-body">
+                    <form asp-action="UpdateStatus" asp-route-id="@Model.OrderId" method="post">
+                        @Html.AntiForgeryToken()
+                        <div class="mb-2">
+                            <select name="status" class="form-select form-select-sm">
+                                @foreach (var s in statusOptions)
+                                {
+                                    <option value="@s" selected="@(s == Model.Status)">@s</option>
+                                }
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-sm btn-primary w-100">Update Status</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Delivery assignment card -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h3 class="h6 mb-0">Delivery Person</h3>
+                </div>
+                <div class="card-body">
+                    @if (Model.DeliveryPerson is not null)
+                    {
+                        <p class="mb-1">
+                            <strong>@Model.DeliveryPerson.Name</strong>
+                            <a href="tel:@Model.DeliveryPerson.Phone" class="text-decoration-none small ms-2">@Model.DeliveryPerson.Phone</a>
+                        </p>
+                        <p class="mb-2 text-muted small">
+                            @(Model.DeliveryPerson.VehicleNumber ?? "no vehicle") &middot;
+                            @(Model.DeliveryPerson.AssignedArea ?? "no area") &middot;
+                            Status: @Model.DeliveryPerson.Status
+                        </p>
+                        <a asp-controller="DeliveryPerson" asp-action="Details" asp-route-id="@Model.DeliveryPerson.Id"
+                           class="btn btn-sm btn-outline-info w-100 mb-2">View Delivery Person</a>
+                    }
+                    else
+                    {
+                        <p class="text-muted small mb-2">No delivery person assigned yet.</p>
+                    }
+
+                    <form asp-action="AssignDelivery" asp-route-id="@Model.OrderId" method="post">
+                        @Html.AntiForgeryToken()
+                        <div class="mb-2">
+                            <select name="deliveryPersonId" class="form-select form-select-sm">
+                                <option value="">— unassign —</option>
+                                @foreach (var choice in (ViewBag.DeliveryPeople as IEnumerable<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>) ?? Enumerable.Empty<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>())
+                                {
+                                    <option value="@choice.Value" selected="@(Model.DeliveryPersonId.HasValue && Model.DeliveryPersonId.Value.ToString() == choice.Value)">@choice.Text</option>
+                                }
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-sm btn-outline-success w-100">
+                            @(Model.DeliveryPersonId.HasValue ? "Reassign" : "Assign")
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Delivery status card -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <h3 class="h6 mb-0">Delivery Status</h3>
+                    @if (!string.IsNullOrEmpty(Model.DeliveryStatus))
+                    {
+                        <span class="badge bg-info text-dark">@Model.DeliveryStatus</span>
+                    }
+                </div>
+                <div class="card-body">
+                    @if (Model.DeliveryPersonId is null)
+                    {
+                        <p class="text-muted small mb-0">Assign a delivery person first to track the delivery status.</p>
+                    }
+                    else
+                    {
+                        @if (Model.DeliveredAt.HasValue)
+                        {
+                            <p class="small text-success mb-2">
+                                Delivered on @Model.DeliveredAt.Value.ToString("yyyy-MM-dd HH:mm") UTC
+                            </p>
+                        }
+                        <form asp-action="UpdateDeliveryStatus" asp-route-id="@Model.OrderId" method="post">
+                            @Html.AntiForgeryToken()
+                            <div class="mb-2">
+                                <select name="deliveryStatus" class="form-select form-select-sm">
+                                    @{
+                                        var deliveryStatusOptions = ViewBag.DeliveryStatusOptions as string[] ?? Array.Empty<string>();
+                                    }
+                                    @foreach (var s in deliveryStatusOptions)
+                                    {
+                                        <option value="@s" selected="@(s == Model.DeliveryStatus)">@s</option>
+                                    }
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-sm btn-outline-primary w-100">Update Delivery Status</button>
+                        </form>
+                    }
+                </div>
+            </div>
+        }
+        <!-- end admin-only cards -->
+    </div>
+</div>

@@ -1,0 +1,120 @@
+﻿@model ecommercesite.Models.Register
+@using ecommercesite.Models
+
+@{
+    ViewData["Title"] = "Customer Account Details";
+    var orders = (ViewBag.Orders as IReadOnlyList<Order>) ?? new List<Order>();
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h2 class="mb-0">@Model.FullName</h2>
+        <p class="text-muted small mb-0">Customer account &middot; <code>@Model.UserId</code></p>
+    </div>
+    <a asp-action="Index" class="btn btn-outline-secondary btn-sm">&larr; Back to List</a>
+</div>
+
+<div class="row g-3">
+    <!-- Account info -->
+    <div class="col-lg-4">
+        <div class="card shadow-sm">
+            <div class="card-header bg-light">
+                <h3 class="h6 mb-0">Account Information</h3>
+            </div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-4">Name</dt>
+                    <dd class="col-sm-8">@Model.FullName</dd>
+
+                    <dt class="col-sm-4">Email</dt>
+                    <dd class="col-sm-8"><a href="mailto:@Model.Email">@Model.Email</a></dd>
+
+                    <dt class="col-sm-4">Phone</dt>
+                    <dd class="col-sm-8">@Model.PhoneNumber</dd>
+
+                    <dt class="col-sm-4">Role</dt>
+                    <dd class="col-sm-8"><span class="badge bg-info text-dark">@Model.Role</span></dd>
+
+                    <dt class="col-sm-4">Active</dt>
+                    <dd class="col-sm-8">
+                        @if (Model.IsActive)
+                        {
+                            <span class="badge bg-success">Yes</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary">No</span>
+                        }
+                    </dd>
+
+                    <dt class="col-sm-4">Registered</dt>
+                    <dd class="col-sm-8 small text-muted">@Model.CreatedAt.ToString("yyyy-MM-dd HH:mm") UTC</dd>
+                </dl>
+            </div>
+            <div class="card-footer d-flex justify-content-between">
+                <a asp-action="Index" class="btn btn-outline-secondary">&larr; Back</a>
+                <div>
+                    <a asp-action="Edit" asp-route-id="@Model.UserId" class="btn btn-outline-primary">Edit</a>
+                    <a asp-action="Delete" asp-route-id="@Model.UserId" class="btn btn-outline-danger">Remove Account</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order history -->
+    <div class="col-lg-8">
+        <div class="card shadow-sm">
+            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                <h3 class="h6 mb-0">Order History</h3>
+                <span class="badge bg-info text-dark">@orders.Count order@(orders.Count == 1 ? "" : "s")</span>
+            </div>
+            <div class="card-body p-0">
+                @if (orders.Count == 0)
+                {
+                    <p class="text-muted text-center py-4 mb-0">This customer has not placed any orders yet.</p>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-sm table-striped mb-0 align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>#</th>
+                                    <th>Date</th>
+                                    <th>Status</th>
+                                    <th>Delivery</th>
+                                    <th class="text-end">Total</th>
+                                    <th class="text-end">View</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var o in orders)
+                                {
+                                    <tr>
+                                        <td><code>#@o.OrderId</code></td>
+                                        <td class="small text-nowrap">@o.OrderDate.ToString("yyyy-MM-dd")</td>
+                                        <td><span class="badge bg-secondary">@o.Status</span></td>
+                                        <td>
+                                            @if (string.IsNullOrEmpty(o.DeliveryStatus))
+                                            {
+                                                <span class="text-muted fst-italic">—</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-info text-dark">@o.DeliveryStatus</span>
+                                            }
+                                        </td>
+                                        <td class="text-end">@o.TotalAmount.ToString("C")</td>
+                                        <td class="text-end">
+                                            <a asp-controller="Order" asp-action="Details" asp-route-id="@o.OrderId" class="btn btn-sm btn-outline-info">Open</a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

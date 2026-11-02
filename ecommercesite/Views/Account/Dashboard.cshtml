@@ -1,0 +1,84 @@
+﻿@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<div class="row g-3">
+    <!-- Sidebar -->
+    <aside class="col-md-3 col-lg-2">
+        <div class="card shadow-sm">
+            <div class="card-header bg-dark text-white">
+                <h3 class="h6 mb-0">Dashboard</h3>
+            </div>
+            <nav class="list-group list-group-flush">
+                <a asp-controller="Home" asp-action="Index" class="list-group-item list-group-item-action">Customers</a>
+                <a asp-controller="Home" asp-action="Create" class="list-group-item list-group-item-action">Add Account</a>
+                <a asp-controller="ProductCat" asp-action="Index" class="list-group-item list-group-item-action">Categories</a>
+                <a asp-controller="Product" asp-action="Index" class="list-group-item list-group-item-action">Products</a>
+                <a asp-controller="Order" asp-action="Index" class="list-group-item list-group-item-action">Orders</a>
+                <a asp-controller="Order" asp-action="YearlyReport" class="list-group-item list-group-item-action">Yearly Report</a>
+                <a asp-controller="Order" asp-action="TopProducts" class="list-group-item list-group-item-action">Top Products</a>
+                <a asp-controller="DeliveryPerson" asp-action="Index" class="list-group-item list-group-item-action">Delivery Personnel</a>
+                <a asp-controller="ProductCat" asp-action="Create" class="list-group-item list-group-item-action">Add Category</a>
+                <a asp-controller="Product" asp-action="Create" class="list-group-item list-group-item-action">Add Product</a>
+                <a asp-controller="Order" asp-action="Create" class="list-group-item list-group-item-action">New Order</a>
+                <a asp-controller="DeliveryPerson" asp-action="Create" class="list-group-item list-group-item-action">Add Delivery Person</a>
+                <a asp-controller="Home" asp-action="Privacy" class="list-group-item list-group-item-action">Privacy</a>
+                <a asp-controller="Account" asp-action="Logout" class="list-group-item list-group-item-action text-danger">Logout</a>
+            </nav>
+        </div>
+    </aside>
+
+    <!-- Main content -->
+    <section class="col-md-9 col-lg-10">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h2 class="text-success">Welcome, @ViewBag.UserFullName!</h2>
+                <hr />
+                <p class="text-muted">
+                    This is your dashboard. From here you can manage customers, product
+                    categories, and your account. Use the sidebar to navigate between
+                    sections.
+                </p>
+
+                <div class="row g-3 mt-1">
+                    <div class="col-md-4">
+                        <div class="card text-white bg-primary h-100">
+                            <div class="card-body">
+                                <h5 class="card-title">Customers</h5>
+                                <p class="card-text">View, search and manage your customer records.</p>
+                                <a asp-controller="Home" asp-action="Index" class="btn btn-light btn-sm">Go to Customers</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card text-white bg-success h-100">
+                            <div class="card-body">
+                                <h5 class="card-title">Categories</h5>
+                                <p class="card-text">Organize your catalog by product category.</p>
+                                <a asp-controller="ProductCat" asp-action="Index" class="btn btn-light btn-sm">Go to Categories</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card text-white bg-warning h-100">
+                            <div class="card-body">
+                                <h5 class="card-title">Products</h5>
+                                <p class="card-text">Manage your product catalog and prices.</p>
+                                <a asp-controller="Product" asp-action="Index" class="btn btn-light btn-sm">Go to Products</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card text-white bg-info h-100">
+                            <div class="card-body">
+                                <h5 class="card-title">Profile</h5>
+                                <p class="card-text">You are logged in as <strong>@ViewBag.UserName</strong>.</p>
+                                <a asp-controller="Account" asp-action="Logout" class="btn btn-light btn-sm">Logout</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>

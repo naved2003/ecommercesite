@@ -1,0 +1,164 @@
+﻿@model ecommercesite.ViewModels.CheckoutViewModel
+
+@{
+    ViewData["Title"] = "Checkout — Pay for Order";
+    var orderNumber = (int)(ViewBag.OrderNumber ?? 0);
+    var orderDate = (DateTime)(ViewBag.OrderDate ?? DateTime.UtcNow);
+    var itemCount = (int)(ViewBag.ItemCount ?? 0);
+    var lastFailure = ViewBag.LastFailureReason as string;
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h3 class="card-title mb-0 h5">
+                    <i class="bi bi-credit-card me-1"></i>
+                    Secure Checkout — Order #@orderNumber
+                </h3>
+            </div>
+            <div class="card-body">
+
+                @if (!string.IsNullOrEmpty(lastFailure))
+                {
+                    <div class="alert alert-warning small mb-3">
+                        <strong>Last attempt failed:</strong> @lastFailure
+                    </div>
+                }
+
+                <!-- Order summary -->
+                <div class="bg-light rounded p-3 mb-3">
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted">Order #</span>
+                        <strong>@orderNumber</strong>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted">Placed on</span>
+                        <span>@orderDate.ToString("yyyy-MM-dd HH:mm") UTC</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted">Items</span>
+                        <span>@itemCount</span>
+                    </div>
+                    <hr class="my-2" />
+                    <div class="d-flex justify-content-between">
+                        <span class="fw-bold">Amount Due</span>
+                        <span class="fw-bold fs-5 text-primary">@Model.Amount.ToString("C")</span>
+                    </div>
+                </div>
+
+                <form asp-action="Process" asp-controller="Payment" asp-route-id="@Model.OrderId" method="post" id="paymentForm">
+                    @Html.AntiForgeryToken()
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                    <input type="hidden" asp-for="OrderId" />
+                    <input type="hidden" asp-for="Amount" />
+
+                    <div class="mb-3">
+                        <label asp-for="CardName" class="form-label"></label>
+                        <input asp-for="CardName" class="form-control" placeholder="Name on card" autocomplete="cc-name" />
+                        <span asp-validation-for="CardName" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="CardNumber" class="form-label"></label>
+                        <div class="input-group">
+                            <input asp-for="CardNumber" class="form-control" placeholder="4242 4242 4242 4242"
+                                   autocomplete="cc-number" inputmode="numeric"
+                                   id="cardNumber" />
+                            <span class="input-group-text" id="brandBadge">—</span>
+                        </div>
+                        <span asp-validation-for="CardNumber" class="text-danger small"></span>
+                        <small class="text-muted">
+                            Test cards: <code>4242 4242 4242 4242</code> (Visa ✓),
+                            <code>5555 5555 5555 4444</code> (MC ✓),
+                            <code>4000 0000 0000 0002</code> (decline ✗)
+                        </small>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Expiry" class="form-label"></label>
+                            <input asp-for="Expiry" class="form-control" placeholder="MM/YY"
+                                   autocomplete="cc-exp" inputmode="numeric" maxlength="5" id="expiry" />
+                            <span asp-validation-for="Expiry" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Cvv" class="form-label"></label>
+                            <input asp-for="Cvv" class="form-control" placeholder="123"
+                                   autocomplete="cc-csc" inputmode="numeric" maxlength="4" id="cvv" />
+                            <span asp-validation-for="Cvv" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-success btn-lg" id="payBtn">
+                            <span id="payBtnText">Pay @Model.Amount.ToString("C")</span>
+                            <span id="payBtnSpinner" class="spinner-border spinner-border-sm d-none" role="status"></span>
+                        </button>
+                        <a asp-controller="Order" asp-action="Details" asp-route-id="@Model.OrderId" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+
+                <p class="text-muted small text-center mt-3 mb-0">
+                    <i class="bi bi-shield-lock"></i>
+                    This is a simulated payment gateway for demo purposes.
+                    No real card is charged. Do not enter real card details.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        (function() {
+            const cardInput = document.getElementById('cardNumber');
+            const brandBadge = document.getElementById('brandBadge');
+            const expiryInput = document.getElementById('expiry');
+            const cvvInput = document.getElementById('cvv');
+            const form = document.getElementById('paymentForm');
+            const payBtn = document.getElementById('payBtn');
+            const payBtnText = document.getElementById('payBtnText');
+            const payBtnSpinner = document.getElementById('payBtnSpinner');
+
+            // ---- Format card number with spaces every 4 digits ----------
+            cardInput.addEventListener('input', function() {
+                let v = this.value.replace(/\D/g, '').slice(0, 19);
+                v = v.replace(/(.{4})/g, '$1 ').trim();
+                this.value = v;
+
+                // Detect brand from first digits
+                const digits = v.replace(/\s/g, '');
+                let brand = '—';
+                if (digits.startsWith('4')) brand = 'Visa';
+                else if (digits.startsWith('34') || digits.startsWith('37')) brand = 'Amex';
+                else if (digits.length >= 2 && parseInt(digits.slice(0, 2)) >= 51 && parseInt(digits.slice(0, 2)) <= 55) brand = 'MC';
+                else if (digits.startsWith('6011') || digits.startsWith('65')) brand = 'Disc';
+                brandBadge.textContent = brand;
+
+                // Amex uses 4-digit CVV; others use 3
+                cvvInput.maxLength = brand === 'Amex' ? 4 : 3;
+                cvvInput.placeholder = brand === 'Amex' ? '1234' : '123';
+            });
+
+            // ---- Auto-insert "/" in expiry after MM ---------------------
+            expiryInput.addEventListener('input', function() {
+                let v = this.value.replace(/\D/g, '').slice(0, 4);
+                if (v.length >= 3) v = v.slice(0, 2) + '/' + v.slice(2);
+                this.value = v;
+            });
+
+            // ---- Show spinner while processing --------------------------
+            form.addEventListener('submit', function() {
+                payBtn.disabled = true;
+                payBtnText.textContent = 'Processing…';
+                payBtnSpinner.classList.remove('d-none');
+            });
+        })();
+    </script>
+}

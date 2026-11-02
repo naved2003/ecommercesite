@@ -1,0 +1,267 @@
+﻿@using ecommercesite.ViewModels
+
+@{
+    ViewData["Title"] = "My Products";
+
+    var productOrders = (ViewBag.ProductOrders as IReadOnlyList<CustomerProductOrderDto>)
+                        ?? new List<CustomerProductOrderDto>();
+    var distribution = (ViewBag.Distribution as IReadOnlyList<CustomerProductDistributionDto>)
+                        ?? new List<CustomerProductDistributionDto>();
+
+    var totalItems = (int)(ViewBag.TotalItems ?? 0);
+    var totalQuantity = (int)(ViewBag.TotalQuantity ?? 0);
+    var totalSpent = (decimal)(ViewBag.TotalSpent ?? 0m);
+
+    // Pie chart data — distribution by total quantity ordered per product.
+    var pieLabels = distribution.Select(d => d.ProductName).ToList();
+    var pieCounts = distribution.Select(d => d.TotalQuantity).ToList();
+    var pieTotal = pieCounts.Sum();
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h2 class="mb-0">My Products</h2>
+        <p class="text-muted small mb-0">All products you've ordered, with date range + product name filters and a distribution pie chart.</p>
+    </div>
+    <a asp-action="PlaceOrder" class="btn btn-success btn-sm">+ Place New Order</a>
+</div>
+
+<!-- Filter form: date range + product name search -->
+@using (Html.BeginForm("MyProducts", "Order", FormMethod.Get, new { @class = "row g-2 mb-3 align-items-end" }))
+{
+    <div class="col-md-3">
+        <label class="form-label small text-muted mb-1" for="startDateFilter">Start date</label>
+        <input type="date" id="startDateFilter" name="startDate" class="form-control"
+               value="@(ViewBag.StartDate as string)" />
+    </div>
+    <div class="col-md-3">
+        <label class="form-label small text-muted mb-1" for="endDateFilter">End date</label>
+        <input type="date" id="endDateFilter" name="endDate" class="form-control"
+               value="@(ViewBag.EndDate as string)" />
+    </div>
+    <div class="col-md-3">
+        <label class="form-label small text-muted mb-1" for="productNameFilter">Product name</label>
+        <input type="text" id="productNameFilter" name="productName" class="form-control"
+               placeholder="e.g. Mouse, Keyboard..."
+               value="@(ViewBag.ProductName as string)" autocomplete="off" />
+    </div>
+    <div class="col-md-auto">
+        <button type="submit" class="btn btn-outline-primary w-100">Filter</button>
+    </div>
+    <div class="col-md-auto">
+        <a asp-action="MyProducts" class="btn btn-outline-secondary w-100">Reset</a>
+    </div>
+}
+
+<!-- KPI cards -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card text-white bg-primary h-100 shadow-sm">
+            <div class="card-body">
+                <h6 class="card-title mb-1">Line Items</h6>
+                <h3 class="mb-0">@totalItems</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-white bg-info h-100 shadow-sm">
+            <div class="card-body">
+                <h6 class="card-title mb-1">Total Quantity</h6>
+                <h3 class="mb-0">@totalQuantity</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-white bg-success h-100 shadow-sm">
+            <div class="card-body">
+                <h6 class="card-title mb-1">Total Spent</h6>
+                <h3 class="mb-0">@totalSpent.ToString("C")</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <!-- Order details table -->
+    <div class="col-lg-8">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                <h3 class="h6 mb-0">Order Details by Product</h3>
+                @if (!string.IsNullOrEmpty(ViewBag.ProductName as string))
+                {
+                    <span class="badge bg-warning text-dark">Filtered: @ViewBag.ProductName</span>
+                }
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Order #</th>
+                                <th>Date</th>
+                                <th>Product</th>
+                                <th class="text-end">Qty</th>
+                                <th class="text-end">Unit Price</th>
+                                <th class="text-end">Line Total</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (productOrders.Count == 0)
+                            {
+                                <tr>
+                                    <td colspan="7" class="text-center text-muted py-4">
+                                        No matching products found. Try adjusting the filters or
+                                        <a asp-action="PlaceOrder">place a new order</a>.
+                                    </td>
+                                </tr>
+                            }
+                            @foreach (var row in productOrders)
+                            {
+                                <tr>
+                                    <td><code>#@row.OrderId</code></td>
+                                    <td class="small text-nowrap">@row.OrderDate.ToString("yyyy-MM-dd")</td>
+                                    <td>@row.ProductName</td>
+                                    <td class="text-end">@row.Quantity</td>
+                                    <td class="text-end">@row.UnitPrice.ToString("C")</td>
+                                    <td class="text-end">@row.LineTotal.ToString("C")</td>
+                                    <td>
+                                        @{
+                                            var badgeClass = row.Status switch
+                                            {
+                                                "Pending" => "bg-warning text-dark",
+                                                "Confirmed" => "bg-info text-dark",
+                                                "Shipped" => "bg-primary",
+                                                "Delivered" => "bg-success",
+                                                "Cancelled" => "bg-danger",
+                                                _ => "bg-secondary"
+                                            };
+                                        }
+                                        <span class="badge @badgeClass">@row.Status</span>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                        @if (productOrders.Count > 0)
+                        {
+                            <tfoot class="table-light">
+                                <tr>
+                                    <th colspan="3" class="text-end">Totals</th>
+                                    <th class="text-end">@totalQuantity</th>
+                                    <th></th>
+                                    <th class="text-end">@totalSpent.ToString("C")</th>
+                                    <th></th>
+                                </tr>
+                            </tfoot>
+                        }
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pie chart sidebar -->
+    <div class="col-lg-4">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h3 class="h6 mb-0">Products by Quantity</h3>
+                @if (pieTotal > 0)
+                {
+                    <span class="badge bg-light text-dark">@pieTotal unit@(pieTotal == 1 ? "" : "s")</span>
+                }
+            </div>
+            <div class="card-body">
+                @if (distribution.Count == 0 || pieTotal == 0)
+                {
+                    <div class="text-center text-muted py-5">
+                        <p class="mb-1" style="font-size: 2rem;">&#x1F4CA;</p>
+                        <p class="mb-0">No product data to chart yet.</p>
+                        <a asp-action="PlaceOrder" class="btn btn-success btn-sm mt-2">Place Your First Order</a>
+                    </div>
+                }
+                else
+                {
+                    <h6 class="text-muted small text-uppercase mb-2">Pie chart</h6>
+                    <div style="position: relative; height: 260px;">
+                        <canvas id="productPieChart"></canvas>
+                    </div>
+
+                    <hr class="my-3" />
+
+                    <h6 class="text-muted small text-uppercase mb-2">Breakdown</h6>
+                    <div class="small">
+                        @foreach (var row in distribution)
+                        {
+                            var pct = pieTotal == 0 ? 0 : (row.TotalQuantity * 100.0 / pieTotal);
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="text-truncate" title="@row.ProductName">@row.ProductName</span>
+                                <span class="text-muted text-nowrap ms-2">
+                                    @row.TotalQuantity unit@(row.TotalQuantity == 1 ? "" : "s")
+                                    (@pct.ToString("0.0")%)
+                                    &middot; @row.TotalSpent.ToString("C")
+                                </span>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @if (distribution.Count > 0 && pieTotal > 0)
+    {
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+        <script>
+            (function () {
+                const palette = ['#2563eb','#f59e0b','#10b981','#ef4444','#8b5cf6','#06b6d4','#ec4899','#84cc16','#f97316','#14b8a6','#6366f1','#a855f7'];
+                const labels  = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(pieLabels));
+                const counts  = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(pieCounts));
+                const total   = counts.reduce((a, b) => a + b, 0);
+                const colors  = labels.map((_, i) => palette[i % palette.length]);
+
+                const ctx = document.getElementById('productPieChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'pie',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            data: counts,
+                            backgroundColor: colors,
+                            borderColor: '#ffffff',
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    label: function (ctx) {
+                                        const value = ctx.parsed;
+                                        const pct = total ? (value * 100 / total).toFixed(1) : 0;
+                                        return ` ${ctx.label}: ${value} unit${value === 1 ? '' : 's'} (${pct}%)`;
+                                    }
+                                }
+                            },
+                            datalabels: {
+                                color: '#ffffff',
+                                font: { weight: 'bold', size: 11 },
+                                textAlign: 'center',
+                                formatter: (value, ctx) => {
+                                    const pct = parseFloat((value * 100 / total).toFixed(1));
+                                    return pct >= 4 ? pct.toFixed(1) + '%' : '';
+                                }
+                            }
+                        }
+                    },
+                    plugins: [ChartDataLabels]
+                });
+            })();
+        </script>
+    }
+}

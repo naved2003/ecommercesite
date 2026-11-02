@@ -1,0 +1,149 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\naved\\source\\repos\\ecommercesite\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{B3788F8B-6E3B-CD37-DAAF-9920B2D9535A}|ecommercesite\\ecommercesite.csproj|c:\\users\\naved\\source\\repos\\ecommercesite\\ecommercesite\\views\\register\\create.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{B3788F8B-6E3B-CD37-DAAF-9920B2D9535A}|ecommercesite\\ecommercesite.csproj|solutionrelative:ecommercesite\\views\\register\\create.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B3788F8B-6E3B-CD37-DAAF-9920B2D9535A}|ecommercesite\\ecommercesite.csproj|c:\\users\\naved\\source\\repos\\ecommercesite\\ecommercesite\\views\\register\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{B3788F8B-6E3B-CD37-DAAF-9920B2D9535A}|ecommercesite\\ecommercesite.csproj|solutionrelative:ecommercesite\\views\\register\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B3788F8B-6E3B-CD37-DAAF-9920B2D9535A}|ecommercesite\\ecommercesite.csproj|c:\\users\\naved\\source\\repos\\ecommercesite\\ecommercesite\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B3788F8B-6E3B-CD37-DAAF-9920B2D9535A}|ecommercesite\\ecommercesite.csproj|solutionrelative:ecommercesite\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B3788F8B-6E3B-CD37-DAAF-9920B2D9535A}|ecommercesite\\ecommercesite.csproj|c:\\users\\naved\\source\\repos\\ecommercesite\\ecommercesite\\data\\applicationdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B3788F8B-6E3B-CD37-DAAF-9920B2D9535A}|ecommercesite\\ecommercesite.csproj|solutionrelative:ecommercesite\\data\\applicationdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B3788F8B-6E3B-CD37-DAAF-9920B2D9535A}|ecommercesite\\ecommercesite.csproj|c:\\users\\naved\\source\\repos\\ecommercesite\\ecommercesite\\controllers\\registercontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B3788F8B-6E3B-CD37-DAAF-9920B2D9535A}|ecommercesite\\ecommercesite.csproj|solutionrelative:ecommercesite\\controllers\\registercontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B3788F8B-6E3B-CD37-DAAF-9920B2D9535A}|ecommercesite\\ecommercesite.csproj|c:\\users\\naved\\source\\repos\\ecommercesite\\ecommercesite\\controllers\\accountcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B3788F8B-6E3B-CD37-DAAF-9920B2D9535A}|ecommercesite\\ecommercesite.csproj|solutionrelative:ecommercesite\\controllers\\accountcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B3788F8B-6E3B-CD37-DAAF-9920B2D9535A}|ecommercesite\\ecommercesite.csproj|c:\\users\\naved\\source\\repos\\ecommercesite\\ecommercesite\\models\\user.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B3788F8B-6E3B-CD37-DAAF-9920B2D9535A}|ecommercesite\\ecommercesite.csproj|solutionrelative:ecommercesite\\models\\user.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 304,
+          "SelectedChildIndex": 1,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{3ae79031-e1bc-11d0-8f78-00a0c9110057}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "Create.cshtml",
+              "DocumentMoniker": "C:\\Users\\naved\\source\\repos\\ecommercesite\\ecommercesite\\Views\\Register\\Create.cshtml",
+              "RelativeDocumentMoniker": "ecommercesite\\Views\\Register\\Create.cshtml",
+              "ToolTip": "C:\\Users\\naved\\source\\repos\\ecommercesite\\ecommercesite\\Views\\Register\\Create.cshtml",
+              "RelativeToolTip": "ecommercesite\\Views\\Register\\Create.cshtml",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAIAAAACAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-08-22T11:49:27.246Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "Index.cshtml",
+              "DocumentMoniker": "C:\\Users\\naved\\source\\repos\\ecommercesite\\ecommercesite\\Views\\Register\\Index.cshtml",
+              "RelativeDocumentMoniker": "ecommercesite\\Views\\Register\\Index.cshtml",
+              "ToolTip": "C:\\Users\\naved\\source\\repos\\ecommercesite\\ecommercesite\\Views\\Register\\Index.cshtml",
+              "RelativeToolTip": "ecommercesite\\Views\\Register\\Index.cshtml",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABwAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-08-22T11:48:55.981Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "AccountController.cs",
+              "DocumentMoniker": "C:\\Users\\naved\\source\\repos\\ecommercesite\\ecommercesite\\Controllers\\AccountController.cs",
+              "RelativeDocumentMoniker": "ecommercesite\\Controllers\\AccountController.cs",
+              "ToolTip": "C:\\Users\\naved\\source\\repos\\ecommercesite\\ecommercesite\\Controllers\\AccountController.cs",
+              "RelativeToolTip": "ecommercesite\\Controllers\\AccountController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-08-22T11:02:03.591Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "Program.cs",
+              "DocumentMoniker": "C:\\Users\\naved\\source\\repos\\ecommercesite\\ecommercesite\\Program.cs",
+              "RelativeDocumentMoniker": "ecommercesite\\Program.cs",
+              "ToolTip": "C:\\Users\\naved\\source\\repos\\ecommercesite\\ecommercesite\\Program.cs",
+              "RelativeToolTip": "ecommercesite\\Program.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-08-22T10:53:07.77Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "ApplicationDbContext.cs",
+              "DocumentMoniker": "C:\\Users\\naved\\source\\repos\\ecommercesite\\ecommercesite\\Data\\ApplicationDbContext.cs",
+              "RelativeDocumentMoniker": "ecommercesite\\Data\\ApplicationDbContext.cs",
+              "ToolTip": "C:\\Users\\naved\\source\\repos\\ecommercesite\\ecommercesite\\Data\\ApplicationDbContext.cs",
+              "RelativeToolTip": "ecommercesite\\Data\\ApplicationDbContext.cs",
+              "ViewState": "AgIAAAUAAAAAAAAAAAAAAAUAAAARAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-08-22T10:50:41.935Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "RegisterController.cs",
+              "DocumentMoniker": "C:\\Users\\naved\\source\\repos\\ecommercesite\\ecommercesite\\Controllers\\RegisterController.cs",
+              "RelativeDocumentMoniker": "ecommercesite\\Controllers\\RegisterController.cs",
+              "ToolTip": "C:\\Users\\naved\\source\\repos\\ecommercesite\\ecommercesite\\Controllers\\RegisterController.cs",
+              "RelativeToolTip": "ecommercesite\\Controllers\\RegisterController.cs",
+              "ViewState": "AgIAABgAAAAAAAAAAADwvy4AAAAZAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-08-22T10:49:38.229Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "User.cs",
+              "DocumentMoniker": "C:\\Users\\naved\\source\\repos\\ecommercesite\\ecommercesite\\Models\\User.cs",
+              "RelativeDocumentMoniker": "ecommercesite\\Models\\User.cs",
+              "ToolTip": "C:\\Users\\naved\\source\\repos\\ecommercesite\\ecommercesite\\Models\\User.cs",
+              "RelativeToolTip": "ecommercesite\\Models\\User.cs",
+              "ViewState": "AgIAABkAAAAAAAAAAAAQwDQAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-08-22T10:47:51.019Z"
+            }
+          ]
+        },
+        {
+          "DockedWidth": 96,
+          "SelectedChildIndex": -1,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{eefa5220-e298-11d0-8f78-00a0c9110057}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

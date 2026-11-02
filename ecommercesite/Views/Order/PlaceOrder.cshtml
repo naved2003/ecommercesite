@@ -1,0 +1,123 @@
+﻿@model ecommercesite.ViewModels.CreateOrderViewModel
+@using Microsoft.AspNetCore.Mvc.Rendering
+
+@{
+    ViewData["Title"] = "Place Order";
+    var products = ViewBag.Products as IEnumerable<SelectListItem> ?? Enumerable.Empty<SelectListItem>();
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-9">
+        <div class="card shadow-sm">
+            <div class="card-header bg-success text-white">
+                <h3 class="card-title mb-0 h5">Place a New Order</h3>
+            </div>
+            <div class="card-body">
+                <p class="text-muted small mb-3">
+                    Pick the products you'd like to order. The order will be tied to your account
+                    (<strong>@Context.Session.GetString("UserFullName")</strong>).
+                </p>
+
+                <form asp-action="PlaceOrder" asp-controller="Order" method="post" id="orderForm">
+                    @Html.AntiForgeryToken()
+                    <div asp-validation-summary="All" class="text-danger"></div>
+
+                    <div class="mb-3">
+                        <label asp-for="ShippingAddress" class="form-label"></label>
+                        <textarea asp-for="ShippingAddress" class="form-control" rows="2"
+                                  placeholder="Where should we ship this order? (optional — leave blank to use your account address)"></textarea>
+                        <span asp-validation-for="ShippingAddress" class="text-danger small"></span>
+                    </div>
+
+                    <h6 class="text-muted small text-uppercase mt-3 mb-2">Products</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered align-middle" id="itemsTable">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width: 70%;">Product</th>
+                                    <th style="width: 20%;">Quantity</th>
+                                    <th class="text-end" style="width: 10%;">Remove</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @for (int i = 0; i < Model.Items.Count; i++)
+                                {
+                                    <tr class="item-row">
+                                        <td>
+                                            <select name="Items[@i].ProductId" class="form-select form-select-sm item-product"
+                                                    asp-items="products">
+                                                <option value="">— select product —</option>
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <input name="Items[@i].Quantity" type="number" min="1" max="10000"
+                                                   class="form-control form-control-sm item-qty"
+                                                   value="@Model.Items[i].Quantity" />
+                                        </td>
+                                        <td class="text-end">
+                                            <button type="button" class="btn btn-sm btn-outline-danger remove-row">&times;</button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mt-2">
+                        <button type="button" id="addRow" class="btn btn-sm btn-outline-success">+ Add another product</button>
+                    </div>
+
+                    <hr class="my-3" />
+
+                    <div class="d-flex justify-content-between">
+                        <a asp-action="Index" class="btn btn-outline-secondary">&larr; My Orders</a>
+                        <button type="submit" class="btn btn-success">Place Order</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        (function () {
+            const tableBody = document.querySelector('#itemsTable tbody');
+            const addBtn    = document.getElementById('addRow');
+
+            function reindex() {
+                [...tableBody.querySelectorAll('tr.item-row')].forEach((row, i) => {
+                    row.querySelector('.item-product').name = `Items[${i}].ProductId`;
+                    row.querySelector('.item-qty').name     = `Items[${i}].Quantity`;
+                });
+            }
+
+            function makeRow() {
+                const template = tableBody.querySelector('tr.item-row');
+                const clone = template.cloneNode(true);
+                clone.querySelector('.item-product').value = '';
+                clone.querySelector('.item-qty').value = '1';
+                tableBody.appendChild(clone);
+                reindex();
+            }
+
+            addBtn.addEventListener('click', makeRow);
+
+            tableBody.addEventListener('click', function (e) {
+                if (e.target.closest('.remove-row')) {
+                    const rows = tableBody.querySelectorAll('tr.item-row');
+                    if (rows.length <= 1) {
+                        alert('At least one product is required.');
+                        return;
+                    }
+                    e.target.closest('tr.item-row').remove();
+                    reindex();
+                }
+            });
+        })();
+    </script>
+}

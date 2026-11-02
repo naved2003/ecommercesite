@@ -1,0 +1,136 @@
+﻿@model ecommercesite.ViewModels.CreateOrderViewModel
+@using Microsoft.AspNetCore.Mvc.Rendering
+
+@{
+    ViewData["Title"] = "New Order";
+    var customers = ViewBag.Customers as IEnumerable<SelectListItem> ?? Enumerable.Empty<SelectListItem>();
+    var products = ViewBag.Products as IEnumerable<SelectListItem> ?? Enumerable.Empty<SelectListItem>();
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-9">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h3 class="card-title mb-0 h5">New Order</h3>
+            </div>
+            <div class="card-body">
+                <form asp-action="Create" asp-controller="Order" method="post" id="orderForm">
+                    @Html.AntiForgeryToken()
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label asp-for="CustId" class="form-label"></label>
+                            <select asp-for="CustId" class="form-select"
+                                    asp-items="customers">
+                                <option value="">— select customer —</option>
+                            </select>
+                            <span asp-validation-for="CustId" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="ShippingAddress" class="form-label"></label>
+                            <input asp-for="ShippingAddress" class="form-control"
+                                   placeholder="(optional) leave blank to use customer's address" />
+                            <span asp-validation-for="ShippingAddress" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <h6 class="text-muted small text-uppercase mt-3 mb-2">Line items</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered align-middle" id="itemsTable">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width: 65%;">Product</th>
+                                    <th style="width: 20%;">Quantity</th>
+                                    <th class="text-end" style="width: 15%;">Remove</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @for (int i = 0; i < Model.Items.Count; i++)
+                                {
+                                    <tr class="item-row">
+                                        <td>
+                                            <select name="Items[@i].ProductId" class="form-select form-select-sm item-product"
+                                                    asp-items="products">
+                                                <option value="">— select product —</option>
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <input name="Items[@i].Quantity" type="number" min="1" max="10000"
+                                                   class="form-control form-control-sm item-qty"
+                                                   value="@Model.Items[i].Quantity" />
+                                        </td>
+                                        <td class="text-end">
+                                            <button type="button" class="btn btn-sm btn-outline-danger remove-row">&times;</button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mt-2">
+                        <button type="button" id="addRow" class="btn btn-sm btn-outline-success">+ Add line</button>
+                        <span class="text-muted small">
+                            Order total will be calculated automatically from current product prices.
+                        </span>
+                    </div>
+
+                    <hr class="my-3" />
+
+                    <div class="d-flex justify-content-between">
+                        <a asp-action="Index" class="btn btn-outline-secondary">&larr; Back to Orders</a>
+                        <button type="submit" class="btn btn-success">Create Order</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        (function () {
+            const tableBody = document.querySelector('#itemsTable tbody');
+            const addBtn    = document.getElementById('addRow');
+
+            // Re-index all rows so ASP.NET model-binds them correctly
+            // (Items[0].ProductId, Items[1].ProductId, ...).
+            function reindex() {
+                [...tableBody.querySelectorAll('tr.item-row')].forEach((row, i) => {
+                    row.querySelector('.item-product').name = `Items[${i}].ProductId`;
+                    row.querySelector('.item-qty').name     = `Items[${i}].Quantity`;
+                });
+            }
+
+            // Clone the first row as a template (clear its values).
+            function makeRow() {
+                const template = tableBody.querySelector('tr.item-row');
+                const clone = template.cloneNode(true);
+                clone.querySelector('.item-product').value = '';
+                clone.querySelector('.item-qty').value = '1';
+                tableBody.appendChild(clone);
+                reindex();
+            }
+
+            addBtn.addEventListener('click', makeRow);
+
+            tableBody.addEventListener('click', function (e) {
+                if (e.target.closest('.remove-row')) {
+                    const rows = tableBody.querySelectorAll('tr.item-row');
+                    if (rows.length <= 1) {
+                        alert('At least one line item is required.');
+                        return;
+                    }
+                    e.target.closest('tr.item-row').remove();
+                    reindex();
+                }
+            });
+        })();
+    </script>
+}

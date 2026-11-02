@@ -1,0 +1,275 @@
+﻿@using ecommercesite.ViewModels
+@using Microsoft.AspNetCore.Mvc.Rendering
+
+@{
+    ViewData["Title"] = "Top Products Report";
+
+    var availableYears = (ViewBag.AvailableYears as List<int>) ?? new List<int> { DateTime.UtcNow.Year };
+    var selectedYear = (int)(ViewBag.SelectedYear ?? DateTime.UtcNow.Year);
+
+    var topByCustomer = (ViewBag.TopByCustomer as IReadOnlyList<TopProductByCustomerDto>)
+                        ?? new List<TopProductByCustomerDto>();
+    var topInYear = (ViewBag.TopInYear as IReadOnlyList<TopProductInYearDto>)
+                        ?? new List<TopProductInYearDto>();
+
+    var yearTopProduct = ViewBag.YearTopProduct as string ?? "—";
+    var yearTopQty = (int)(ViewBag.YearTopQty ?? 0);
+    var yearTopRevenue = (decimal)(ViewBag.YearTopRevenue ?? 0m);
+    var yearProductCount = (int)(ViewBag.YearProductCount ?? 0);
+    var yearTotalQty = (int)(ViewBag.YearTotalQty ?? 0);
+    var yearTotalRevenue = (decimal)(ViewBag.YearTotalRevenue ?? 0m);
+
+    // Bar chart data — top 10 products in the selected year.
+    var barLabels = topInYear.Take(10).Select(r => r.ProductName).ToList();
+    var barCounts = topInYear.Take(10).Select(r => r.TotalQuantity).ToList();
+    var barTotal = barCounts.Sum();
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h2 class="mb-0">Top Products Report</h2>
+        <p class="text-muted small mb-0">Most-purchased product per customer + most-ordered product in a given year.</p>
+    </div>
+    <a asp-action="Index" class="btn btn-outline-secondary btn-sm">&larr; Back to Orders</a>
+</div>
+
+<!-- Year picker -->
+<div class="card shadow-sm mb-3">
+    <div class="card-body py-2">
+        @using (Html.BeginForm("TopProducts", "Order", FormMethod.Get, new { @class = "row g-2 align-items-end" }))
+        {
+            <div class="col-md-3">
+                <label class="form-label small text-muted mb-1" for="yearPicker">Year</label>
+                <select id="yearPicker" name="year" class="form-select form-select-sm"
+                        asp-items="@(new SelectList(availableYears, selectedYear))">
+                </select>
+            </div>
+            <div class="col-md-auto">
+                <button type="submit" class="btn btn-sm btn-outline-primary">Update</button>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Year KPI cards -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card text-white bg-success h-100 shadow-sm">
+            <div class="card-body">
+                <h6 class="card-title mb-1">Top Product in @selectedYear</h6>
+                <h5 class="mb-0">@yearTopProduct</h5>
+                <p class="mb-0 small">@yearTopQty unit@(yearTopQty == 1 ? "" : "s") &middot; @yearTopRevenue.ToString("C")</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-primary h-100 shadow-sm">
+            <div class="card-body">
+                <h6 class="card-title mb-1">Distinct Products (@selectedYear)</h6>
+                <h3 class="mb-0">@yearProductCount</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-info h-100 shadow-sm">
+            <div class="card-body">
+                <h6 class="card-title mb-1">Units Sold (@selectedYear)</h6>
+                <h3 class="mb-0">@yearTotalQty</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-warning h-100 shadow-sm">
+            <div class="card-body">
+                <h6 class="card-title mb-1">Revenue (@selectedYear)</h6>
+                <h3 class="mb-0">@yearTotalRevenue.ToString("C")</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <!-- Top product per customer -->
+    <div class="col-lg-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                <h3 class="h6 mb-0">Max Product per Customer <span class="text-muted small">(all-time)</span></h3>
+                <span class="badge bg-primary">@topByCustomer.Count customer@(topByCustomer.Count == 1 ? "" : "s")</span>
+            </div>
+            <div class="card-body p-0">
+                @if (topByCustomer.Count == 0)
+                {
+                    <p class="text-muted text-center py-4 mb-0">No customer orders yet.</p>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-sm table-striped mb-0 align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Customer</th>
+                                    <th>Top Product</th>
+                                    <th class="text-end">Qty</th>
+                                    <th class="text-end">Spent</th>
+                                    <th class="text-end">Distinct</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var row in topByCustomer)
+                                {
+                                    <tr>
+                                        <td>
+                                            <strong>@row.CustomerName</strong>
+                                            <br />
+                                            <span class="text-muted small">@row.Email</span>
+                                        </td>
+                                        <td>@row.ProductName</td>
+                                        <td class="text-end">@row.TotalQuantity</td>
+                                        <td class="text-end">@row.TotalSpent.ToString("C")</td>
+                                        <td class="text-end text-muted small">@row.DistinctProducts</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Top products in the selected year -->
+    <div class="col-lg-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                <h3 class="h6 mb-0">Products Ordered in @selectedYear</h3>
+                <span class="badge bg-info text-dark">@topInYear.Count product@(topInYear.Count == 1 ? "" : "s")</span>
+            </div>
+            <div class="card-body">
+                @if (topInYear.Count == 0)
+                {
+                    <p class="text-muted text-center py-4 mb-0">No orders placed in @selectedYear.</p>
+                }
+                else
+                {
+                    <!-- Bar chart: top 10 products by quantity -->
+                    <h6 class="text-muted small text-uppercase mb-2">Top 10 by Quantity</h6>
+                    <div style="position: relative; height: 280px;">
+                        <canvas id="yearTopBarChart"></canvas>
+                    </div>
+
+                    <hr class="my-3" />
+
+                    <!-- Full table -->
+                    <div class="table-responsive">
+                        <table class="table table-sm table-striped mb-0 align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Product</th>
+                                    <th class="text-end">Qty</th>
+                                    <th class="text-end">Orders</th>
+                                    <th class="text-end">Revenue</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var row in topInYear)
+                                {
+                                    <tr>
+                                        <td>@row.ProductName</td>
+                                        <td class="text-end">@row.TotalQuantity</td>
+                                        <td class="text-end">@row.OrderCount</td>
+                                        <td class="text-end">@row.TotalRevenue.ToString("C")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                            <tfoot class="table-light">
+                                <tr>
+                                    <th>Total</th>
+                                    <th class="text-end">@yearTotalQty</th>
+                                    <th></th>
+                                    <th class="text-end">@yearTotalRevenue.ToString("C")</th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @if (topInYear.Count > 0)
+    {
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+        <script>
+            (function() {
+                const palette = ['#2563eb', '#f59e0b', '#10b981', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899', '#84cc16', '#f97316', '#14b8a6'];
+                const labels = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(barLabels));
+                const counts = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(barCounts));
+                const total = counts.reduce((a, b) => a + b, 0);
+                const colors = labels.map((_, i) => palette[i % palette.length]);
+
+                const ctx = document.getElementById('yearTopBarChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Units Sold',
+                            data: counts,
+                            backgroundColor: colors,
+                            borderColor: colors,
+                            borderWidth: 1,
+                            borderRadius: 4,
+                            maxBarThickness: 48
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        indexAxis: 'y',  // horizontal bars so long product names fit
+                        scales: {
+                            x: {
+                                beginAtZero: true,
+                                ticks: { precision: 0, stepSize: 1, color: '#6b7280' },
+                                grid: { color: '#f1f5f9' },
+                                title: { display: true, text: 'Units Sold', color: '#6b7280', font: { size: 11 } }
+                            },
+                            y: {
+                                ticks: {
+                                    color: '#6b7280',
+                                    callback: function(value) {
+                                        const lbl = this.getLabelForValue(value);
+                                        return lbl.length > 22 ? lbl.slice(0, 21) + '…' : lbl;
+                                    }
+                                },
+                                grid: { display: false }
+                            }
+                        },
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(ctx) {
+                                        const v = ctx.parsed.x;
+                                        const pct = total ? (v * 100 / total).toFixed(1) : 0;
+                                        return ` ${v} unit${v === 1 ? '' : 's'} (${pct}%)`;
+                                    }
+                                }
+                            },
+                            datalabels: {
+                                anchor: 'end',
+                                align: 'end',
+                                color: '#1f2937',
+                                font: { weight: 'bold', size: 10 },
+                                formatter: (value) => value
+                            }
+                        }
+                    },
+                    plugins: [ChartDataLabels]
+                });
+            })();
+        </script>
+    }
+}

@@ -1,0 +1,168 @@
+﻿@using ecommercesite.Models
+@{
+    ViewData["Title"] = "Payment Result";
+
+    var order = ViewBag.Order as Order;
+    var latestPayment = ViewBag.LatestPayment as Payment;
+    var history = (ViewBag.History as IReadOnlyList<Payment>) ?? new List<Payment>();
+
+    var isPaid = latestPayment?.Status == "Paid";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+
+        @if (order is null)
+        {
+            <div class="alert alert-warning">Order not found.</div>
+        }
+        else
+        {
+            <!-- Result banner -->
+            @if (isPaid)
+            {
+                <div class="card border-success shadow-sm mb-3">
+                    <div class="card-body text-center py-4">
+                        <div class="display-6 text-success mb-2">&#x2705;</div>
+                        <h3 class="text-success mb-1">Payment Successful!</h3>
+                        <p class="text-muted mb-0">Your order has been confirmed and is being processed.</p>
+                    </div>
+                </div>
+            }
+            else if (latestPayment is { Status: "Failed" })
+            {
+                <div class="card border-danger shadow-sm mb-3">
+                    <div class="card-body text-center py-4">
+                        <div class="display-6 text-danger mb-2">&#x274C;</div>
+                        <h3 class="text-danger mb-1">Payment Failed</h3>
+                        <p class="text-muted mb-1">@latestPayment.FailureReason</p>
+                        <a asp-action="Retry" asp-route-id="@order.OrderId" class="btn btn-warning mt-2">
+                            Try Again with a Different Card
+                        </a>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="card border-secondary shadow-sm mb-3">
+                    <div class="card-body text-center py-4">
+                        <div class="display-6 text-muted mb-2">&#x23F3;</div>
+                        <h3 class="text-muted mb-1">Awaiting Payment</h3>
+                        <p class="text-muted mb-0">This order hasn't been paid yet.</p>
+                        <a asp-action="Checkout" asp-route-id="@order.OrderId" class="btn btn-primary mt-2">
+                            Pay Now
+                        </a>
+                    </div>
+                </div>
+            }
+
+            <!-- Payment details -->
+            @if (latestPayment is not null)
+            {
+                <div class="card shadow-sm mb-3">
+                    <div class="card-header bg-light">
+                        <h3 class="h6 mb-0">Payment Details</h3>
+                    </div>
+                    <div class="card-body">
+                        <dl class="row mb-0">
+                            <dt class="col-sm-4">Status</dt>
+                            <dd class="col-sm-8">
+                                @if (latestPayment.Status == "Paid")
+                                {
+                                    <span class="badge bg-success">Paid</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger">Failed</span>
+                                }
+                            </dd>
+
+                            <dt class="col-sm-4">Amount</dt>
+                            <dd class="col-sm-8">@latestPayment.Amount.ToString("C")</dd>
+
+                            <dt class="col-sm-4">Method</dt>
+                            <dd class="col-sm-8">@latestPayment.Method</dd>
+
+                            @if (!string.IsNullOrEmpty(latestPayment.CardBrand))
+                            {
+                                <dt class="col-sm-4">Card</dt>
+                                <dd class="col-sm-8">@latestPayment.CardBrand ****@latestPayment.CardLast4</dd>
+                            }
+
+                            @if (!string.IsNullOrEmpty(latestPayment.TransactionId))
+                            {
+                                <dt class="col-sm-4">Transaction ID</dt>
+                                <dd class="col-sm-8"><code>@latestPayment.TransactionId</code></dd>
+                            }
+
+                            <dt class="col-sm-4">Date</dt>
+                            <dd class="col-sm-8">@latestPayment.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss") UTC</dd>
+
+                            @if (!string.IsNullOrEmpty(latestPayment.FailureReason))
+                            {
+                                <dt class="col-sm-4">Failure Reason</dt>
+                                <dd class="col-sm-8 text-danger">@latestPayment.FailureReason</dd>
+                            }
+                        </dl>
+                    </div>
+                </div>
+            }
+
+            <!-- Payment history (if more than one attempt) -->
+            @if (history.Count > 1)
+            {
+                <div class="card shadow-sm mb-3">
+                    <div class="card-header bg-light">
+                        <h3 class="h6 mb-0">Payment History (@history.Count attempts)</h3>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-striped mb-0 align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Card</th>
+                                        <th class="text-end">Amount</th>
+                                        <th>Status</th>
+                                        <th>Transaction ID</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var p in history)
+                                    {
+                                        <tr>
+                                            <td class="small text-nowrap">@p.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
+                                            <td>@(p.CardBrand ?? "—") ****@(p.CardLast4 ?? "????")</td>
+                                            <td class="text-end">@p.Amount.ToString("C")</td>
+                                            <td>
+                                                @if (p.Status == "Paid")
+                                                {
+                                                    <span class="badge bg-success">Paid</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-danger">Failed</span>
+                                                }
+                                            </td>
+                                            <td><code>@(p.TransactionId ?? "—")</code></td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- Action buttons -->
+            <div class="d-flex justify-content-between">
+                <a asp-controller="Order" asp-action="Details" asp-route-id="@order.OrderId" class="btn btn-outline-secondary">
+                    &larr; Back to Order #@order.OrderId
+                </a>
+                <a asp-controller="Account" asp-action="CustomerDashboard" class="btn btn-outline-primary">
+                    Go to Dashboard
+                </a>
+            </div>
+        }
+    </div>
+</div>

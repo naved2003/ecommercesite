@@ -1,0 +1,277 @@
+﻿@model IEnumerable<ecommercesite.ViewModels.OrderYearlyReportDto>
+
+@{
+    ViewData["Title"] = "Yearly Order Report";
+
+    var years = Model.Select(r => r.Year.ToString()).ToList();
+    var counts = Model.Select(r => r.OrderCount).ToList();
+    var revenues = Model.Select(r => r.TotalRevenue).ToList();
+    var totalOrders = (int)(ViewBag.TotalOrders ?? 0);
+    var totalRevenue = (decimal)(ViewBag.TotalRevenue ?? 0m);
+    var avgOrderVal = (decimal)(ViewBag.AvgOrderValue ?? 0m);
+    var bestYear = ViewBag.BestYear as string ?? "—";
+    var bestYearRev = (decimal)(ViewBag.BestYearRevenue ?? 0m);
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h2 class="mb-0">Yearly Order Report</h2>
+        <p class="text-muted small mb-0">Order count and revenue per calendar year.</p>
+    </div>
+    <a asp-action="Index" class="btn btn-outline-secondary btn-sm">&larr; Back to Orders</a>
+</div>
+
+<!-- KPI cards -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card text-white bg-primary h-100 shadow-sm">
+            <div class="card-body">
+                <h6 class="card-title mb-1">Total Orders</h6>
+                <h3 class="mb-0">@totalOrders</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-success h-100 shadow-sm">
+            <div class="card-body">
+                <h6 class="card-title mb-1">Total Revenue</h6>
+                <h3 class="mb-0">@totalRevenue.ToString("C")</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-info h-100 shadow-sm">
+            <div class="card-body">
+                <h6 class="card-title mb-1">Avg Order Value</h6>
+                <h3 class="mb-0">@avgOrderVal.ToString("C")</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-warning h-100 shadow-sm">
+            <div class="card-body">
+                <h6 class="card-title mb-1">Best Year</h6>
+                <h3 class="mb-0">@bestYear <span class="small">(@bestYearRev.ToString("C"))</span></h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <!-- Column chart -->
+    <div class="col-lg-8">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                <h3 class="h6 mb-0">Orders per Year</h3>
+                @if (totalOrders > 0)
+                {
+                    <span class="badge bg-primary">@Model.Count() year@(Model.Count() == 1 ? "" : "s")</span>
+                }
+            </div>
+            <div class="card-body">
+                @if (!Model.Any() || totalOrders == 0)
+                {
+                    <div class="text-center text-muted py-5">
+                        <p class="mb-1" style="font-size: 2rem;">&#x1F4C8;</p>
+                        <p class="mb-0">No order data to chart yet.</p>
+                        <a asp-action="Create" class="btn btn-primary btn-sm mt-2">+ New Order</a>
+                    </div>
+                }
+                else
+                {
+                    <div style="position: relative; height: 380px;">
+                        <canvas id="yearlyChart"></canvas>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary table -->
+    <div class="col-lg-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-light">
+                <h3 class="h6 mb-0">Summary by Year</h3>
+            </div>
+            <div class="card-body p-0">
+                @if (!Model.Any())
+                {
+                    <p class="text-muted text-center py-4 mb-0">No data.</p>
+                }
+                else
+                {
+                    <table class="table table-sm table-striped mb-0 align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Year</th>
+                                <th class="text-end">Orders</th>
+                                <th class="text-end">Revenue</th>
+                                <th class="text-end">Avg</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var row in Model)
+                            {
+                                <tr>
+                                    <td><code>@row.Year</code></td>
+                                    <td class="text-end">@row.OrderCount</td>
+                                    <td class="text-end">@row.TotalRevenue.ToString("C")</td>
+                                    <td class="text-end text-muted small">
+                                        @(row.OrderCount > 0 ? (row.TotalRevenue / row.OrderCount).ToString("C") : "—")
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot class="table-light">
+                            <tr>
+                                <th>Total</th>
+                                <th class="text-end">@totalOrders</th>
+                                <th class="text-end">@totalRevenue.ToString("C")</th>
+                                <th class="text-end">@avgOrderVal.ToString("C")</th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @if (Model.Any() && totalOrders > 0)
+    {
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+        <script>
+            (function () {
+            const years    = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(years));
+            const counts   = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(counts));
+            const revenues = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(revenues));
+            const totalOrders  = counts.reduce((a, b) => a + b, 0);
+            const totalRevenue = revenues.reduce((a, b) => a + b, 0);
+
+            const ctx = document.getElementById('yearlyChart').getContext('2d');
+            new Chart(ctx, {
+            type: 'bar',
+            data: {
+            labels: years,
+            datasets: [
+            {
+            label: 'Orders',
+            data: counts,
+            backgroundColor: '#2563eb',
+            borderColor: '#2563eb',
+            borderWidth: 1,
+            borderRadius: 4,
+            maxBarThickness: 80,
+            yAxisID: 'y',
+            order: 2
+            },
+            {
+            label: 'Revenue (USD)',
+            data: revenues,
+            type: 'line',
+            borderColor: '#f59e0b',
+            backgroundColor: 'rgba(245, 158, 11, 0.15)',
+            borderWidth: 2,
+            pointRadius: 4,
+            pointBackgroundColor: '#f59e0b',
+            tension: 0.25,
+            yAxisID: 'y1',
+            order: 1
+            }
+            ]
+            },
+            options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            scales: {
+            y: {
+            type: 'linear',
+            position: 'left',
+            beginAtZero: true,
+            title: {
+            display: true,
+            text: 'Orders',
+            color: '#2563eb',
+            font: { weight: 'bold', size: 12 }
+            },
+            ticks: {
+            precision: 0,
+            stepSize: 1,
+            color: '#2563eb'
+            },
+            grid: { color: '#f1f5f9' }
+            },
+            y1: {
+            type: 'linear',
+            position: 'right',
+            beginAtZero: true,
+            title: {
+            display: true,
+            text: 'Revenue (USD)',
+            color: '#f59e0b',
+            font: { weight: 'bold', size: 12 }
+            },
+            ticks: {
+            color: '#f59e0b',
+            callback: function (value) {
+            return '$' + value.toLocaleString();
+            }
+            },
+            grid: { drawOnChartArea: false }
+            },
+            x: {
+            title: {
+            display: true,
+            text: 'Year',
+            color: '#6b7280',
+            font: { size: 12 }
+            },
+            ticks: { color: '#6b7280' },
+            grid: { display: false }
+            }
+            },
+            plugins: {
+            legend: {
+            display: true,
+            position: 'top',
+            labels: { boxWidth: 14, font: { size: 12 } }
+            },
+            tooltip: {
+            callbacks: {
+            label: function (ctx) {
+            const v = ctx.parsed.y;
+            if (ctx.dataset.label === 'Orders') {
+            const pct = totalOrders ? (v * 100 / totalOrders).toFixed(1) : 0;
+            return ` Orders: ${v} (${pct}%)`;
+            }
+            const pct = totalRevenue ? (v * 100 / totalRevenue).toFixed(1) : 0;
+            return ` Revenue: $${v.toLocaleString()} (${pct}%)`;
+            }
+            }
+            },
+            datalabels: {
+            anchor: 'end',
+            align: 'top',
+            color: '#1f2937',
+            font: { weight: 'bold', size: 11 },
+            // Only show order-count labels above the bars,
+            // not on the revenue line points.
+            display: function (ctx) {
+            return ctx.dataset.label === 'Orders';
+            },
+            formatter: (value, ctx) => {
+            const pct = totalOrders ? (value * 100 / totalOrders).toFixed(1) : 0;
+            return value + ' (' + pct + '%)';
+            }
+            }
+            }
+            },
+            plugins: [ChartDataLabels]
+            });
+            })();
+        </script>
+    }
+}

@@ -1,0 +1,125 @@
+﻿@{
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+    var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+    var isLoggedIn = !string.IsNullOrEmpty(Context.Session.GetString("UserName"));
+    var role = Context.Session.GetString("UserRole") ?? "Customer";
+    var isAdmin = role.Equals("Admin", StringComparison.OrdinalIgnoreCase);
+}
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top shadow-sm">
+    <div class="container-fluid">
+
+        <a class="navbar-brand fw-semibold" href="@Url.Action("Index", "Home")">
+            <i class="bi bi-bag-check-fill me-1"></i>
+            ecommercesite
+        </a>
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                data-bs-target="#navbarNav" aria-controls="navbarNav"
+                aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+
+                @if (isAdmin)
+                {
+                    <!-- ============ ADMIN MENU ============ -->
+                    <li class="nav-item">
+                        <a class="nav-link @(currentController == "Home" && currentAction == "Index" ? "active" : "")"
+                           href="@Url.Action("Index", "Home")">Customers</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link @(currentController == "Home" && currentAction == "Create" ? "active" : "")"
+                           href="@Url.Action("Create", "Home")">Add Account</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link @(currentController == "ProductCat" ? "active" : "")"
+                           href="@Url.Action("Index", "ProductCat")">Categories</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link @(currentController == "Product" ? "active" : "")"
+                           href="@Url.Action("Index", "Product")">Products</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link @(currentController == "Order" && currentAction == "Index" ? "active" : "")"
+                           href="@Url.Action("Index", "Order")">Orders</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link @(currentController == "Order" && currentAction == "YearlyReport" ? "active" : "")"
+                           href="@Url.Action("YearlyReport", "Order")">Yearly Report</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link @(currentController == "Order" && currentAction == "TopProducts" ? "active" : "")"
+                           href="@Url.Action("TopProducts", "Order")">Top Products</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link @(currentController == "DeliveryPerson" ? "active" : "")"
+                           href="@Url.Action("Index", "DeliveryPerson")">Delivery</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link @(currentController == "Account" && currentAction == "Dashboard" ? "active" : "")"
+                           href="@Url.Action("Dashboard", "Account")">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-warning" href="@Url.Action("Logout", "Account")">Logout</a>
+                    </li>
+                }
+                else if (isLoggedIn)
+                {
+                    <!-- ============ CUSTOMER MENU ============ -->
+                    <li class="nav-item">
+                        <a class="nav-link @(currentController == "Account" && currentAction == "CustomerDashboard" ? "active" : "")"
+                           href="@Url.Action("CustomerDashboard", "Account")">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link @(currentController == "Product" ? "active" : "")"
+                           href="@Url.Action("Index", "Product")">Browse Products</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link @(currentController == "Order" && currentAction == "PlaceOrder" ? "active" : "")"
+                           href="@Url.Action("PlaceOrder", "Order")">Place Order</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link @(currentController == "Order" && currentAction == "Index" ? "active" : "")"
+                           href="@Url.Action("Index", "Order")">My Orders</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link @(currentController == "Order" && currentAction == "MyProducts" ? "active" : "")"
+                           href="@Url.Action("MyProducts", "Order")">My Products</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-warning" href="@Url.Action("Logout", "Account")">Logout</a>
+                    </li>
+                }
+                else
+                {
+                    <!-- ============ ANONYMOUS MENU ============ -->
+                    <li class="nav-item">
+                        <a class="nav-link @(currentController == "Account" ? "active" : "")"
+                           href="@Url.Action("Index", "Account")">Login</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link @(currentController == "Register" ? "active" : "")"
+                           href="@Url.Action("Create", "Register")">Register</a>
+                    </li>
+                }
+
+            </ul>
+
+            <span class="navbar-text text-light small">
+                @if (isLoggedIn)
+                {
+                    <text>Hi, @Context.Session.GetString("UserFullName")</text>
+                    <span class="badge bg-light text-dark ms-1">@role</span>
+                }
+                else
+                {
+                    <text>Welcome, guest</text>
+                }
+            </span>
+        </div>
+
+    </div>
+</nav>
